@@ -3,3 +3,5 @@ __pycache__
 *.pyo
 crm.db
 .DS_Store
+.env
+alembic/versions/*.py
