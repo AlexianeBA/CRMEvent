@@ -4,7 +4,7 @@ class ContactBase(BaseModel):
     first_name: str
     last_name: str
     email: str | None = None
-    phone: str | None = None
+    phone_number: str | None = None
     company_id: int | None = None
 
 class ContactCreate(ContactBase):
