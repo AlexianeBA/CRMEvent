@@ -7,6 +7,7 @@ from alembic import context
 from crmevent.db.base import Base
 from crmevent.models.company import Company
 from crmevent.models.users import Users
+from crmevent.models.contact import Contact
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
