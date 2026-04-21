@@ -12,3 +12,4 @@ class Company(Base):
     updated_at = Column(String, nullable=False)
 
     contacts = relationship("Contact", back_populates="company")
+    opportunities = relationship("Opportunity", back_populates="company")

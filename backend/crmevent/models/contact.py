@@ -13,3 +13,4 @@ class Contact(Base):
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=True)
 
     company = relationship("Company", back_populates="contacts")
+    opportunities = relationship("Opportunity", back_populates="contact")
