@@ -14,3 +14,4 @@ class Contact(Base):
 
     company = relationship("Company", back_populates="contacts")
     opportunities = relationship("Opportunity", back_populates="contact")
+    events = relationship("Event", back_populates="contact")

@@ -14,6 +14,9 @@ class Opportunity(Base):
     created_at = Column(String, nullable=False)
     updated_at = Column(String, nullable=False)
     commercial_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
     contact = relationship("Contact", back_populates="opportunities")
     company = relationship("Company", back_populates="opportunities")
     activities = relationship("Activity", back_populates="opportunity")
+    quotes = relationship("Quote", back_populates="opportunity")
+    events = relationship("Event", back_populates="opportunity")

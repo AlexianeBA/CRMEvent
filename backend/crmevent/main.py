@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from crmevent.routers import company, users, contact, opportunity, activity
+from crmevent.routers import company, users, contact, opportunity, activity, event, quote
 
 app = FastAPI(
     title="CRM API",
@@ -13,6 +13,8 @@ app.include_router(users.router)
 app.include_router(contact.router)
 app.include_router(opportunity.router)
 app.include_router(activity.router)
+app.include_router(event.router)
+app.include_router(quote.router)
 
 @app.get("/")
 def root():
