@@ -1,9 +1,13 @@
 from sqlalchemy.orm import Session
 from crmevent.models.company import Company
 from crmevent.schemas.company import CompanyCreate
+from datetime import datetime, timezone
 
 def create_company(db: Session, data: CompanyCreate):
-    company = Company(**data.dict())
+    now = datetime.now(timezone.utc).isoformat()
+    payload = data.dict()
+    payload.update({"created_at": now, "updated_at": now})
+    company = Company(**payload)
     db.add(company)
     db.commit()
     db.refresh(company)
