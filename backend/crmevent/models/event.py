@@ -22,3 +22,4 @@ class Event(Base):
     contact = relationship("Contact", back_populates="events")
     company = relationship("Company", back_populates="events")
     quotes = relationship("Quote", back_populates="event")
+    assigned_user = relationship("Users", back_populates="assigned_events")

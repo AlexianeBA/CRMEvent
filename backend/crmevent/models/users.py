@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 from crmevent.db.base import Base
 
 class Users(Base):
@@ -10,3 +11,17 @@ class Users(Base):
     is_active = Column(Integer, default=1)
     
     
+    opportunities = relationship(
+        "Opportunity",
+        back_populates="commercial"
+    )
+
+    assigned_events = relationship(
+        "Event",
+        back_populates="assigned_user"
+    )
+
+    assigned_quotes = relationship(
+        "Quote",
+        back_populates="assigned_user"
+    )
