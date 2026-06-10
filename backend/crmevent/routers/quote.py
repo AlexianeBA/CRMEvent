@@ -4,12 +4,13 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.quote import QuoteCreate, QuoteRead
 from crmevent.services import quote as service
+from crmevent.core.security import get_current_user
 
 router = APIRouter(prefix="/quotes", tags=["quotes"])
 
 
 @router.post("/", response_model=QuoteRead)
-def create(data: QuoteCreate, db: Session = Depends(get_db)):
+def create(data: QuoteCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     return service.create_quote(db, data)
 
 

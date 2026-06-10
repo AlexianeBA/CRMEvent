@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.opportunity import OpportunityCreate, OpportunityRead,OpportunityStatus, OpportunityStatusUpdate
 from crmevent.services import opportunity as service
+from crmevent.core.security import get_current_user
 
 router = APIRouter(prefix="/opportunities", tags=["opportunities"])
 
 @router.post("/", response_model=OpportunityRead)
-def create(data: OpportunityCreate, db: Session = Depends(get_db)):
+def create(data: OpportunityCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     return service.create_opportunity(db, data)
 
 @router.get("/", response_model=list[OpportunityRead])
@@ -34,7 +35,7 @@ def get(opportunity_id: int, db: Session = Depends(get_db)):
     return opportunity
 
 @router.patch("/{opportunity_id}/status", response_model=OpportunityRead)
-def patch_status(opportunity_id: int, data: OpportunityStatusUpdate, db: Session = Depends(get_db)):
+def patch_status(opportunity_id: int, data: OpportunityStatusUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     opportunity = service.update_opportunity_status(db, opportunity_id, data.status)
     if not opportunity:
         raise HTTPException(status_code=404, detail="Not found")

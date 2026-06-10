@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.company import CompanyCreate, CompanyRead
 from crmevent.services import company as service
+from crmevent.core.security import get_current_user
+
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
 @router.post("/", response_model=CompanyRead)
-def create(data: CompanyCreate, db: Session = Depends(get_db)):
+def create(data: CompanyCreate, db: Session = Depends(get_db),current_user = Depends(get_current_user)):
     return service.create_company(db, data)
 
 @router.get("/", response_model=list[CompanyRead])

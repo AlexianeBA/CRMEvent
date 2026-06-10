@@ -4,12 +4,13 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.event import EventCreate, EventRead
 from crmevent.services import event as service
+from crmevent.core.security import get_current_user
 
 router = APIRouter(prefix="/events", tags=["events"])
 
 
 @router.post("/", response_model=EventRead)
-def create(data: EventCreate, db: Session = Depends(get_db)):
+def create(data: EventCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     return service.create_event(db, data)
 
 

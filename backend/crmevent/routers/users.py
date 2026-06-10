@@ -6,12 +6,16 @@ from crmevent.db.base import get_db
 from crmevent.schemas.users import UsersCreate, UsersRead
 from crmevent.services import users as service
 from crmevent.core.security import create_access_token, get_current_user
+from crmevent.models.users import Users
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UsersRead, status_code=status.HTTP_201_CREATED)
 def register(data: UsersCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(Users).filter(Users.email == data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
     return service.create_user(db, data)
 
 
@@ -33,7 +37,7 @@ def login(
         "token_type": "bearer",
     }
 
-@router.get("users/list", response_model=list[UsersRead])
+@router.get("/users/list", response_model=list[UsersRead])
 def list_users(db: Session = Depends(get_db)):
     return db.query(service.Users).all()
 

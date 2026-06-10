@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.contact import ContactCreate, ContactRead
 from crmevent.services import contact as service
+from crmevent.core.security import get_current_user
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
 @router.post("/", response_model=ContactRead)
-def create(data: ContactCreate, db: Session = Depends(get_db)):
+def create(data: ContactCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     return service.create_contact(db, data)
 
 @router.get("/", response_model=list[ContactRead])
