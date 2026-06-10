@@ -1,0 +1,15 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crmevent-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: sqlite:///./data/crm.db
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
