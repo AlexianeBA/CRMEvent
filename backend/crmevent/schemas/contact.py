@@ -10,6 +10,13 @@ class ContactBase(BaseModel):
 class ContactCreate(ContactBase):
     pass
 
+class ContactUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    phone_number: str | None = None
+    company_id: int | None = None
+
 class ContactRead(ContactBase):
     id: int
 
