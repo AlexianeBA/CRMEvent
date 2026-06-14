@@ -37,3 +37,11 @@ def list_all(
         assigned_user_id=assigned_user_id,
         q=q,
     )
+
+@router.delete("/{event_id}", response_model=dict)
+def delete(event_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    event = service.get_event(db, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Not found")
+    service.delete_event(db, event)
+    return {"detail": f"Event {event_id} deleted successfully"}
