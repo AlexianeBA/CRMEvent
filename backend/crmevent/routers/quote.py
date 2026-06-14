@@ -39,3 +39,11 @@ def list_all(
         event_id=event_id,
         q=q,
     )
+
+@router.delete("/{quote_id}", response_model=dict)
+def delete(quote_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    quote = service.get_quote(db, quote_id)
+    if not quote:
+        raise HTTPException(status_code=404, detail="Not found")
+    service.delete_quote(db, quote)
+    return {"detail": f"Quote {quote_id} deleted successfully"}

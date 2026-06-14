@@ -11,14 +11,14 @@ class QuoteStatus(str, enum.Enum):
     rejected = "rejected"
 
 class QuoteBase(BaseModel):
-    number: str
-    title: str
+    number: str = Field(..., min_length=1, max_length=50)
+    title: str = Field(..., min_length=1, max_length=255)
     total_amount: Decimal = Field(..., gt=0)
-    status: QuoteStatus
-    company_id: int
-    opportunity_id: int
-    assigned_user_id: int
-    event_id: Optional[int] = None
+    status: QuoteStatus = Field(..., description="Status of the quote")
+    company_id: int = Field(..., gt=0)
+    opportunity_id: int = Field(..., gt=0)
+    assigned_user_id: int = Field(..., gt=0)
+    event_id: Optional[int] = Field(default=None, gt=0) 
 
 class QuoteCreate(QuoteBase):
     pass
