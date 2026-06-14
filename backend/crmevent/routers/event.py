@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from crmevent.db.base import get_db
-from crmevent.schemas.event import EventCreate, EventRead
+from crmevent.schemas.event import EventCreate, EventRead, EventUpdate
 from crmevent.services import event as service
 from crmevent.core.security import get_current_user
 
@@ -37,6 +37,13 @@ def list_all(
         assigned_user_id=assigned_user_id,
         q=q,
     )
+
+@router.patch("/{event_id}", response_model=EventRead)
+def update(event_id: int, data: EventUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    event = service.get_event(db, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Not found")
+    return service.update_event(db, event, data)
 
 @router.delete("/{event_id}", response_model=dict)
 def delete(event_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):

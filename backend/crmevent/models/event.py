@@ -17,7 +17,7 @@ class Event(Base):
     opportunity_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False)
     assigned_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=True)
-
+    
     opportunity = relationship("Opportunity", back_populates="events")
     contact = relationship("Contact", back_populates="events")
     company = relationship("Company", back_populates="events")
