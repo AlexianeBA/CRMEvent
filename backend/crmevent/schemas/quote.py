@@ -20,6 +20,14 @@ class QuoteBase(BaseModel):
     assigned_user_id: int = Field(..., gt=0)
     event_id: Optional[int] = Field(default=None, gt=0) 
 
+class QuoteUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    total_amount: Optional[Decimal] = Field(None, gt=0)
+    status: Optional[QuoteStatus] = Field(None, description="Status of the quote")
+    company_id: Optional[int] = Field(None, gt=0)
+    opportunity_id: Optional[int] = Field(None, gt=0)
+    assigned_user_id: Optional[int] = Field(None, gt=0)
+    event_id: Optional[int] = Field(default=None, gt=0)
 class QuoteCreate(QuoteBase):
     pass
 
