@@ -8,16 +8,25 @@ class ActivityType(str, Enum):
     email = "email"
     meeting = "meeting"
 
-    
+
+class ActivityStatus(str, Enum):
+    draft = "draft"
+    planned = "planned"
+    done = "done"
+    canceled = "canceled"
+
+
 class ActivityBase(BaseModel):
     type: ActivityType
     content: str = Field(..., min_length=1, max_length=1000)
     opportunity_id: int = Field(..., gt=0)
+    status: ActivityStatus = ActivityStatus.draft
 
 class ActivityUpdate(BaseModel):
     type: ActivityType | None = None
     content: str | None = Field(default=None, min_length=1, max_length=1000)
-    opportunity_id: int | None = Field(default=None, gt=0)
+    status: ActivityStatus | None = None
+    
 class ActivityCreate(ActivityBase):
     pass
 

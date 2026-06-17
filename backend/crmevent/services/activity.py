@@ -1,11 +1,15 @@
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 from crmevent.models.activity import Activity
 from crmevent.schemas.activity import ActivityCreate, ActivityUpdate
 from crmevent.services.opportunity import get_opportunity
 
+from crmevent.services.workflow import ensure_transition_allowed, ACTIVITY_TRANSITIONS
+
+
 def create_activity(db: Session, data: ActivityCreate):
     get_opportunity(db, data.opportunity_id)
-    activity = Activity(**data.dict())
+    activity = Activity(**data.model_dump())
     db.add(activity)
     db.commit()
     db.refresh(activity)
@@ -23,14 +27,30 @@ def get_activity(db: Session, activity_id: int):
 
 def update_activity(db: Session, activity_id: int, data: ActivityUpdate):
     activity = db.query(Activity).filter(Activity.id == activity_id).first()
-    if activity:
-        update_data = data.dict(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(activity, key, value)
-        db.commit()
-        db.refresh(activity)
-        return activity
-    return None
+
+    if not activity:
+        raise HTTPException(status_code=404, detail=f"Activity {activity_id} not found")
+    
+    if activity.status in {"done", "canceled"}:
+        raise HTTPException(status_code=400, detail="Cannot update an activity that is done or canceled")
+    
+    payload = data.model_dump(exclude_unset=True)
+
+    if "opportunity_id" in payload:
+        raise HTTPException(status_code=400, detail="Cannot change the opportunity of an activity")
+    
+    if "status" in payload:
+        new_status = payload.pop("status").value
+        ensure_transition_allowed(ACTIVITY_TRANSITIONS, activity.status, new_status, "Activity")
+        activity.status = new_status
+    
+    for key, value in payload.items():
+        setattr(activity, key, value)
+
+    db.commit()
+    db.refresh(activity)
+    return activity
+   
 def delete_activity(db: Session, activity: Activity):
     db.delete(activity)
     db.commit()
