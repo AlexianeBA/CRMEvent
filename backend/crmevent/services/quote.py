@@ -1,13 +1,16 @@
 from sqlalchemy.orm import Session
 from crmevent.models.quote import Quote
-from crmevent.schemas.quote import QuoteCreate
+from crmevent.schemas.quote import QuoteCreate, QuoteStatus
 from crmevent.services.company import get_company
 from crmevent.services.opportunity import get_opportunity
 from crmevent.services.event import get_event
 from crmevent.models.users import Users
+from crmevent.services.workflow import ensure_transition_allowed, QUOTE_TRANSITIONS, block_if_final_status
 
 from fastapi import HTTPException
 
+IMMUTABLE_AFTER_SENT = {"number", "company_id", "opportunity_id", "assigned_user_id", "event_id"}
+IMMUTABLE_AFTER_FINAL = {"number", "title", "total_amount", "company_id", "opportunity_id", "assigned_user_id", "event_id", "status"}
 ALLOWED_SORT = {
     "id": Quote.id,
     "title": Quote.title,
@@ -75,13 +78,43 @@ def get_quotes(db: Session, company_id: int | None = None, opportunity_id: int |
     return query.all()
 
 def update_quote(db: Session, quote: Quote, data):
-    for key, value in data.model_dump(exclude_unset=True).items():
+    payload = data.model_dump(exclude_unset=True)
+
+    if quote.status in {"accepted", "rejected", "expired", "locked"}:
+        raise HTTPException(status_code=400, detail=f"Quote is locked in status {quote.status}")
+    
+    if quote.status in {"sent"}:
+        forbidden = IMMUTABLE_AFTER_SENT.intersection(payload.keys())
+        if forbidden:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Immutable fields for Quote after sent: {', '.join(sorted(forbidden))}",
+            )
+    if "status" in payload:
+        new_status = payload.pop("status").value
+        ensure_transition_allowed(QUOTE_TRANSITIONS, quote.status, new_status, "Quote")
+        quote.status = new_status
+
+    for key, value in payload.items():
         setattr(quote, key, value)
 
     db.commit()
     db.refresh(quote)
     return quote
 
+def update_quote_status(db: Session, quote_id: int, status: QuoteStatus):
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail=f"Quote {quote_id} not found")
+
+    ensure_transition_allowed(QUOTE_TRANSITIONS, quote.status, status.value, "Quote")
+    quote.status = status.value
+    db.commit()
+    db.refresh(quote)
+    return quote
+
 def delete_quote(db: Session, quote: Quote):
+    if quote.status in {"sent", "accepted", "rejected", "expired", "locked"}:
+        raise HTTPException(status_code=400, detail="Cannot delete a quote after it enters workflow")
     db.delete(quote)
     db.commit()

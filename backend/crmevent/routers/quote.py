@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from crmevent.db.base import get_db
-from crmevent.schemas.quote import QuoteCreate, QuoteRead, QuoteUpdate
+from crmevent.schemas.quote import QuoteCreate, QuoteRead, QuoteStatus, QuoteUpdate
 from crmevent.services import quote as service
 from crmevent.core.security import get_current_user
 
@@ -46,6 +46,10 @@ def update(quote_id: int, data: QuoteUpdate, db: Session = Depends(get_db), curr
     if not quote:
         raise HTTPException(status_code=404, detail="Not found")
     return service.update_quote(db, quote, data)
+
+@router.patch("/{quote_id}/status", response_model=QuoteRead)
+def update_status(quote_id: int, status: QuoteStatus, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    return service.update_quote_status(db, quote_id, status)
 
 @router.delete("/{quote_id}", response_model=dict)
 def delete(quote_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
