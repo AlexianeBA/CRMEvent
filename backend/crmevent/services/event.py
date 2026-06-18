@@ -9,6 +9,7 @@ from crmevent.services.company import get_company
 from crmevent.services.opportunity import get_opportunity
 from crmevent.services.contact import get_contact
 from crmevent.models.users import Users
+from crmevent.services.workflow import ensure_transition_allowed, EVENT_TRANSITIONS
 
 
 
@@ -64,21 +65,20 @@ def get_events(
     return query.all()
 
 def update_event(db: Session, event: Event, data: EventUpdate):
+    if event.status in {"held", "canceled", "locked"}:
+        raise HTTPException(status_code=400, detail="Cannot update an event that is held, canceled, or locked")
+    
     payload = data.model_dump(exclude_unset=True)
 
-    if "company_id" in payload and not get_company(db, payload["company_id"]):
-        raise HTTPException(status_code=404, detail=f"Company {payload['company_id']} not found")
-
-    if "opportunity_id" in payload and not get_opportunity(db, payload["opportunity_id"]):
-        raise HTTPException(status_code=404, detail=f"Opportunity {payload['opportunity_id']} not found")
-
-    if "assigned_user_id" in payload:
-        user = db.query(Users).filter(Users.id == payload["assigned_user_id"]).first()
-        if not user:
-            raise HTTPException(status_code=404, detail=f"User {payload['assigned_user_id']} not found")
-
-    if "contact_id" in payload and payload["contact_id"] is not None and not get_contact(db, payload["contact_id"]):
-        raise HTTPException(status_code=404, detail=f"Contact {payload['contact_id']} not found")
+    if event.status in {"scheduled"}:
+        for field in {"company_id", "opportunity_id", "assigned_user_id", "contact_id"}:
+            if field in payload:
+                raise HTTPException(status_code=400, detail=f"{field} is immutable after scheduling")
+            
+    if "status" in payload:
+        new_status = payload.pop("status").value
+        ensure_transition_allowed(EVENT_TRANSITIONS, event.status, new_status, "Event")
+        event.status = new_status
 
     for key, value in payload.items():
         setattr(event, key, value)

@@ -5,6 +5,13 @@ class EventType(str, Enum):
     webinar = "webinar"
     workshop = "workshop"
     conference = "conference"
+
+class EventStatus(str, Enum):
+    draft = "draft"
+    scheduled = "scheduled"
+    held = "held"
+    canceled = "canceled"
+    locked = "locked"
 class EventBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     date: str = Field(..., pattern=r"^\d{2}-\d{2}-\d{4}$")  
@@ -16,6 +23,7 @@ class EventBase(BaseModel):
     location: str = Field(..., min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
     contact_id: int | None = Field(default=None, gt=0)
+    status: EventStatus = EventStatus.draft
 
 class EventCreate(EventBase):
     pass
@@ -23,15 +31,11 @@ class EventCreate(EventBase):
 class EventUpdate(BaseModel):
     title: str | None = None
     date: str | None = None
-    company_id: int | None = None
-    opportunity_id: int | None = None
-    assigned_user_id: int | None = None
     type: EventType | None = None
     duration: int | None = None
     location: str | None = None
     description: str | None = None
-    contact_id: int | None = None
-
+    status: EventStatus | None = None
 class EventRead(EventBase):
     id: int
 
