@@ -32,11 +32,7 @@ class OpportunityCreate(OpportunityBase):
 
 class OpportunityUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
-    status: OpportunityStatus | None = None
     amount: Decimal | None = Field(default=None, gt=0, decimal_places=2)
-    company_id: int | None = Field(default=None, gt=0)
-    contact_id: int | None = Field(default=None, gt=0)
-    commercial_id: int | None = Field(default=None, gt=0)
 class OpportunityRead(OpportunityBase):
     id: int
     created_at: str

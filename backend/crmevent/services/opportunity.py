@@ -5,6 +5,10 @@ from crmevent.models.company import Company
 from crmevent.models.contact import Contact
 from crmevent.models.users import Users
 from crmevent.schemas.opportunity import OpportunityCreate, OpportunityStatus, OpportunityUpdate
+from crmevent.services.workflow import OPPORTUNITY_TRANSITIONS, ensure_transition_allowed, block_if_final_status
+
+IMMUTABLE_FIELDS = {"company_id", "contact_id", "commercial_id"}
+
 
 def create_opportunity(db: Session, data: OpportunityCreate):
     company = db.query(Company).filter(Company.id == data.company_id).first()
@@ -19,7 +23,7 @@ def create_opportunity(db: Session, data: OpportunityCreate):
     if not commercial:
         raise HTTPException(status_code=404, detail=f"Commercial {data.commercial_id} not found")
     
-    opportunity = Opportunity(**data.dict())
+    opportunity = Opportunity(**data.model_dump())
     db.add(opportunity)
     db.commit()
     db.refresh(opportunity)
@@ -52,19 +56,31 @@ def get_opportunity(db: Session, opportunity_id: int):
 
 def update_opportunity(db: Session, opportunity_id: int, data: OpportunityUpdate):
     opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
-    if opportunity:
-        update_data = data.dict(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(opportunity, key, value)
-        db.commit()
-        db.refresh(opportunity)
-        return opportunity
-    raise HTTPException(status_code=404, detail=f"Opportunity {opportunity_id} not found")
-
-def update_opportunity_status( db: Session, opportunity_id: int, status: OpportunityStatus):
-    opportunity = get_opportunity(db, opportunity_id)
     if not opportunity:
         raise HTTPException(status_code=404, detail=f"Opportunity {opportunity_id} not found")
+
+    block_if_final_status(opportunity.status, {"closed_won", "closed_lost"}, "Opportunity")
+
+    payload = data.model_dump(exclude_unset=True)
+
+    if "company_id" in payload or "contact_id" in payload or "commercial_id" in payload:
+        raise HTTPException(status_code=400, detail="Company, contact and commercial are immutable after creation")
+
+    for key, value in payload.items():
+        setattr(opportunity, key, value)
+
+    db.commit()
+    db.refresh(opportunity)
+    return opportunity
+
+def update_opportunity_status( db: Session, opportunity_id: int, status: OpportunityStatus):
+    opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+    if not opportunity:
+        raise HTTPException(status_code=404, detail=f"Opportunity {opportunity_id} not found")
+
+    ensure_transition_allowed(
+        OPPORTUNITY_TRANSITIONS, opportunity.status, status.value, "Opportunity"
+    )
 
     opportunity.status = status.value
     db.commit()
