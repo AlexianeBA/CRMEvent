@@ -16,3 +16,4 @@ class Company(Base):
     opportunities = relationship("Opportunity", back_populates="company")
     events = relationship("Event", back_populates="company")
     quotes = relationship("Quote", back_populates="company")
+    invoices = relationship("Invoice", back_populates="company")
