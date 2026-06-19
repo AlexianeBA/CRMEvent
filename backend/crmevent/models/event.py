@@ -12,6 +12,7 @@ class Event(Base):
     duration = Column(Integer, nullable=False)
     location = Column(String, nullable=False)
     description = Column(String, nullable=True)
+    status = Column(Enum("draft", "scheduled", "held", "canceled", "locked", name="event_status"), nullable=False, default="draft")
 
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     opportunity_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False)

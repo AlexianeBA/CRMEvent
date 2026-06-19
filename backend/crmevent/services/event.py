@@ -11,7 +11,12 @@ from crmevent.services.contact import get_contact
 from crmevent.models.users import Users
 from crmevent.services.workflow import ensure_transition_allowed, EVENT_TRANSITIONS
 
-
+IMMUTABLE_AFTER_SCHEDULED = {
+    "company_id",
+    "opportunity_id",
+    "assigned_user_id",
+    "contact_id",
+}
 
 def create_event(db: Session, data: EventCreate):
     if not get_company(db, data.company_id):
@@ -70,19 +75,30 @@ def update_event(db: Session, event: Event, data: EventUpdate):
     
     payload = data.model_dump(exclude_unset=True)
 
-    if event.status in {"scheduled"}:
-        for field in {"company_id", "opportunity_id", "assigned_user_id", "contact_id"}:
-            if field in payload:
-                raise HTTPException(status_code=400, detail=f"{field} is immutable after scheduling")
+    if event.status == "scheduled":
+        forbidden_fields = IMMUTABLE_AFTER_SCHEDULED.intersection(payload.keys())
+        if forbidden_fields:
+            raise HTTPException(status_code=400, detail=( "The following fields are immutable after scheduling: "
+                    + ", ".join(sorted(forbidden_fields))
+                ),)
             
-    if "status" in payload:
-        new_status = payload.pop("status").value
-        ensure_transition_allowed(EVENT_TRANSITIONS, event.status, new_status, "Event")
-        event.status = new_status
-
     for key, value in payload.items():
         setattr(event, key, value)
 
+    db.commit()
+    db.refresh(event)
+    return event
+
+def update_event_status(db: Session, event_id: int, new_status: str):
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail=f"Event {event_id} not found")
+    
+    if event.status in {"held", "canceled", "locked"}:
+        raise HTTPException(status_code=400, detail="Cannot update an event that is held, canceled, or locked")
+    
+    ensure_transition_allowed(EVENT_TRANSITIONS, event.status, new_status, "Event")
+    event.status = new_status
     db.commit()
     db.refresh(event)
     return event

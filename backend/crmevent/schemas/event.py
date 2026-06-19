@@ -35,7 +35,6 @@ class EventUpdate(BaseModel):
     duration: int | None = None
     location: str | None = None
     description: str | None = None
-    status: EventStatus | None = None
 class EventRead(EventBase):
     id: int
 
