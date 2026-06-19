@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
-from crmevent.schemas.activity import ActivityCreate, ActivityRead, ActivityUpdate
+from crmevent.schemas.activity import ActivityCreate, ActivityRead, ActivityUpdate, ActivityStatus
 from crmevent.services import activity as service
 from crmevent.core.security import get_current_user
 
@@ -35,7 +35,7 @@ def patch(activity_id: int, data: ActivityUpdate, db: Session = Depends(get_db),
     return activity
 
 @router.patch("/{activity_id}/status", response_model=ActivityRead)
-def update_status(activity_id: int, status: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def update_status(activity_id: int, status: ActivityStatus, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     activity = service.update_activity_status(db, activity_id, status)
     if not activity:
         raise HTTPException(status_code=404, detail="Not found")

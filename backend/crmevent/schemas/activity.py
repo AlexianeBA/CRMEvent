@@ -25,7 +25,6 @@ class ActivityBase(BaseModel):
 class ActivityUpdate(BaseModel):
     type: ActivityType | None = None
     content: str | None = Field(default=None, min_length=1, max_length=1000)
-    status: ActivityStatus | None = None
 
 class ActivityCreate(ActivityBase):
     pass
