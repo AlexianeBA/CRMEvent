@@ -10,7 +10,7 @@ class Contact(Base):
     last_name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     phone_number = Column(String, nullable=True)
-    company_id = Column(Integer, ForeignKey("companies.id"), nullable=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
 
     company = relationship("Company", back_populates="contacts")
     opportunities = relationship("Opportunity", back_populates="contact")
