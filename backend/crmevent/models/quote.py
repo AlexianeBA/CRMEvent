@@ -9,7 +9,7 @@ class Quote(Base):
     number = Column(String, unique=True, nullable=False)
     title = Column(String, nullable=False)
     total_amount = Column(Numeric(10, 2), nullable=False)
-    status = Column(Enum("draft", "sent", "accepted", "rejected", name="quote_status"), nullable=False) 
+    status = Column(Enum("draft", "sent", "paid", "overdue", "canceled", "locked", name="quote_status"), nullable=False, default="draft")
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     opportunity_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False)
     assigned_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -19,3 +19,4 @@ class Quote(Base):
     company = relationship("Company", back_populates="quotes")
     event = relationship("Event", back_populates="quotes")
     assigned_user = relationship("Users", back_populates="assigned_quotes")
+    invoices = relationship("Invoice", back_populates="quote")

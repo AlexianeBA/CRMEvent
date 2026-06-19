@@ -6,6 +6,7 @@ from crmevent.services.opportunity import get_opportunity
 from crmevent.services.event import get_event
 from crmevent.models.users import Users
 from crmevent.services.workflow import ensure_transition_allowed, QUOTE_TRANSITIONS, block_if_final_status
+from crmevent.services.invoice import create_invoice_from_quote
 
 from fastapi import HTTPException
 
@@ -16,6 +17,19 @@ ALLOWED_SORT = {
     "title": Quote.title,
     "total_amount": Quote.total_amount,
 }
+
+def accept_quote(db: Session, quote_id: int, user_id: int):
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    ensure_transition_allowed(QUOTE_TRANSITIONS, quote.status, "accepted", "Quote")
+    quote.status = "accepted"
+
+    invoice = create_invoice_from_quote(db, quote.id, user_id)
+    db.commit()
+    db.refresh(quote)
+    return quote, invoice
 
 def generate_quote_number(db: Session):
 
@@ -51,7 +65,8 @@ def create_quote(db: Session, data: QuoteCreate):
     db.refresh(quote)
     return quote
 
-
+def get_quote(db: Session, quote_id: int):
+    return db.query(Quote).filter(Quote.id == quote_id).first()
 
 def get_quotes(db: Session, company_id: int | None = None, opportunity_id: int | None = None, assigned_user_id: int | None = None, event_id: int | None = None, q: str | None = None, sort_order: str = "desc", sort_by: str | None = None):
     query = db.query(Quote)

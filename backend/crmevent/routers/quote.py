@@ -13,6 +13,9 @@ router = APIRouter(prefix="/quotes", tags=["quotes"])
 def create(data: QuoteCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     return service.create_quote(db, data)
 
+@router.post("/{quote_id}/accept")
+def accept_quote(quote_id: int, user_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),):
+    return service.accept_quote(db, quote_id, user_id)
 
 @router.get("/{quote_id}", response_model=QuoteRead)
 def get(quote_id: int, db: Session = Depends(get_db)):
@@ -53,8 +56,4 @@ def update_status(quote_id: int, status: QuoteStatus, db: Session = Depends(get_
 
 @router.delete("/{quote_id}", response_model=dict)
 def delete(quote_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    quote = service.get_quote(db, quote_id)
-    if not quote:
-        raise HTTPException(status_code=404, detail="Not found")
-    service.delete_quote(db, quote)
-    return {"detail": f"Quote {quote_id} deleted successfully"}
+    quote = service.update_quote_worflow(db, quote_id, QuoteStatus.deleted)
