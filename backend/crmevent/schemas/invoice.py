@@ -6,10 +6,17 @@ class InvoiceStatus(str, enum.Enum):
     sent = "sent"
     paid = "paid"
     overdue = "overdue"
+    canceled = "canceled"
+    locked = "locked"
 
 class InvoiceBase(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
     total_amount: float = Field(..., gt=0)
+    quote_id: int = Field(..., gt=0)
+    company_id: int = Field(..., gt=0)
     opportunity_id: int = Field(..., gt=0)
+    assigned_user_id: int = Field(..., gt=0)
+    status: InvoiceStatus = InvoiceStatus.draft
 
 class InvoiceCreate(InvoiceBase):
     pass
@@ -29,7 +36,8 @@ class InvoiceRead(InvoiceBase):
         from_attributes = True
 
 class InvoiceUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=255)
     total_amount: float | None = Field(default=None, gt=0)
     status: InvoiceStatus | None = None
-    opportunity_id: int | None = Field(default=None, gt=0)
+    
 

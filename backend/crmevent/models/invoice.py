@@ -10,7 +10,7 @@ class Invoice(Base):
     number = Column(String, nullable=False)
     title = Column(String, nullable=False)
     total_amount = Column(Numeric(10, 2), nullable=False)
-    status = Column(Enum("draft", "sent", "paid", "overdue", name="invoice_status"), nullable=False)
+    status = Column(Enum("draft", "sent", "paid", "overdue", "canceled", "locked", name="invoice_status"), nullable=False)
 
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False)

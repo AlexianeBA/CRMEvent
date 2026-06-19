@@ -57,12 +57,7 @@ def patch_status(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    invoice = service.update_invoice_status(db, invoice_id, status)
-
-    if not invoice:
-        raise HTTPException(status_code=404, detail="Not found")
-
-    return invoice
+    return service.update_invoice_status(db, invoice_id, status)
 
 @router.delete("/{invoice_id}", response_model=dict)
 def delete_invoice(invoice_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):

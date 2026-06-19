@@ -1,16 +1,20 @@
 from sqlalchemy.orm import Session
 from crmevent.models.invoice import Invoice
 from crmevent.models.quote import Quote
-from crmevent.schemas.invoice import InvoiceCreate, InvoiceUpdate
+from crmevent.schemas.invoice import InvoiceCreate, InvoiceUpdate, InvoiceStatus
 from crmevent.services.company import get_company
 from crmevent.services.opportunity import get_opportunity
 from crmevent.services.event import get_event
 from crmevent.models.users import Users
-from crmevent.schemas.invoice import InvoiceStatus
 from sqlalchemy import asc, desc
 
 
 from fastapi import HTTPException
+
+from crmevent.services.workflow import ensure_transition_allowed, INVOICE_TRANSITIONS
+
+
+IMMUTABLE_FIELDS_AFTER_SENT = {"quote_id", "company_id", "opportunity_id", "assigned_user_id", "number"}
 
 def generate_invoice_number(db: Session):
     last_invoice = db.query(Invoice).order_by(Invoice.id.desc()).first()
@@ -33,6 +37,10 @@ def create_invoice_from_quote(db: Session, quote_id: int, user_id: int):
     if quote.status != "accepted":
         raise HTTPException(status_code=400, detail="Quote must be accepted")
 
+    user = db.query(Users).filter(Users.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     invoice = Invoice(
         number=generate_invoice_number(db),
         title=quote.title,
@@ -102,6 +110,19 @@ def get_invoices(
 def update_invoice(db: Session, invoice: Invoice, data: InvoiceUpdate):
     payload = data.model_dump(exclude_unset=True)
 
+    if invoice.status in {"paid", "canceled", "locked"}:
+        raise HTTPException(status_code=400, detail="Invoice is locked")
+
+    if invoice.status in {"sent", "overdue"}:
+        forbidden = IMMUTABLE_FIELDS_AFTER_SENT.intersection(payload.keys())
+        if forbidden:
+            raise HTTPException(status_code=400, detail=f"Immutable fields after sent: {', '.join(sorted(forbidden))}")
+
+    if "status" in payload:
+        new_status = payload.pop("status").value
+        ensure_transition_allowed(INVOICE_TRANSITIONS, invoice.status, new_status, "Invoice")
+        invoice.status = new_status
+
     for key, value in payload.items():
         setattr(invoice, key, value)
 
@@ -110,13 +131,21 @@ def update_invoice(db: Session, invoice: Invoice, data: InvoiceUpdate):
     return invoice
 
 def update_invoice_status(db: Session, invoice_id: int, status: InvoiceStatus):
-    invoice = get_invoice(db, invoice_id)
-
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
     if not invoice:
-        return None
+        raise HTTPException(status_code=404, detail=f"Invoice {invoice_id} not found")
 
-    invoice.status = status
+    ensure_transition_allowed(INVOICE_TRANSITIONS, invoice.status, status.value, "Invoice")
+    invoice.status = status.value
     db.commit()
     db.refresh(invoice)
     return invoice
 
+def delete_invoice(db: Session, invoice: Invoice):
+    if invoice.status in {"sent", "paid", "overdue", "locked"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete invoice after workflow start",
+        )
+
+    db.delete(invoice)
