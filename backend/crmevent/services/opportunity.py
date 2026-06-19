@@ -86,3 +86,13 @@ def update_opportunity_status( db: Session, opportunity_id: int, status: Opportu
     db.commit()
     db.refresh(opportunity)
     return opportunity
+
+def delete_opportunity(db: Session, opportunity_id: int):
+    opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+    if not opportunity:
+        raise HTTPException(status_code=404, detail=f"Opportunity {opportunity_id} not found")
+    block_if_final_status(opportunity.status, {"closed_won", "closed_lost"}, "Opportunity")
+
+    db.delete(opportunity)
+    db.commit()
+    return {"detail": f"Opportunity {opportunity_id} deleted successfully"}

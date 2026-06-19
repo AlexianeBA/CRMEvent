@@ -21,3 +21,4 @@ class Opportunity(Base):
     quotes = relationship("Quote", back_populates="opportunity")
     events = relationship("Event", back_populates="opportunity")
     commercial = relationship("Users", back_populates="opportunities")
+    invoices = relationship("Invoice", back_populates="opportunity")

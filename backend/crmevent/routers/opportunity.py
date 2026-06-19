@@ -44,25 +44,15 @@ def get(opportunity_id: int, db: Session = Depends(get_db)):
     return opportunity
 
 @router.patch("/{opportunity_id}", response_model=OpportunityRead)
-def patch(opportunity_id: int, data: OpportunityUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    opportunity = service.update_opportunity(db, opportunity_id, data)
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="Not found")
-    return opportunity
+def patch(opportunity_id: int, data: OpportunityUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user),):
+    return service.update_opportunity(db, opportunity_id, data)
 
 
 @router.patch("/{opportunity_id}/status", response_model=OpportunityRead)
-def patch_status(opportunity_id: int, data: OpportunityStatusUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    opportunity = service.update_opportunity_status(db, opportunity_id, data.status)
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="Not found")
-    return opportunity
+def update_status(opportunity_id: int, status: OpportunityStatus, db: Session = Depends(get_db), current_user=Depends(get_current_user),):
+    return service.update_opportunity_status(db, opportunity_id, status)
+
 
 @router.delete("/{opportunity_id}")
 def delete(opportunity_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="Not found")
-    db.delete(opportunity)
-    db.commit()
-    return True
+    return service.delete_opportunity(db, opportunity_id)
