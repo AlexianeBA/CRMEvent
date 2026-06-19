@@ -25,3 +25,7 @@ class Users(Base):
         "Quote",
         back_populates="assigned_user"
     )
+    assigned_invoices = relationship(
+        "Invoice",
+        back_populates="assigned_user"
+    )
