@@ -58,7 +58,8 @@ const login = async () => {
 
     router.push("/dashboard");
   } catch (err) {
-    alert("Identifiants invalides");
+  const msg = err?.response?.data?.detail || "Erreur de connexion";
+  alert(Array.isArray(msg) ? JSON.stringify(msg) : msg);
   }
 };
 </script>

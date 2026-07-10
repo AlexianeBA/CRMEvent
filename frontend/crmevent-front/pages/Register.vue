@@ -69,7 +69,14 @@ const register = async () => {
     alert("Compte créé avec succès");
     router.push("/login");
   } catch (err) {
-    alert("Erreur lors de la création du compte");
+  const detail = err?.response?.data?.detail;
+
+  if (Array.isArray(detail)) {
+    const messages = detail.map((item) => item.msg).join(", ");
+    alert(messages);
+  } else {
+    alert(detail || "Erreur lors de la création du compte");
+  }
   }
 };
 </script>
