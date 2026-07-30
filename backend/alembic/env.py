@@ -12,6 +12,7 @@ from crmevent.models.opportunity import Opportunity
 from crmevent.models.activity import Activity
 from crmevent.models.event import Event
 from crmevent.models.quote import Quote
+from crmevent.models.invoice import Invoice
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

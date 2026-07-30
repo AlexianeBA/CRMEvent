@@ -3,13 +3,16 @@ from fastapi import HTTPException
 from crmevent.models.activity import Activity
 from crmevent.schemas.activity import ActivityCreate, ActivityUpdate, ActivityStatus
 from crmevent.services.opportunity import get_opportunity
-
+from datetime import datetime, timezone
 from crmevent.services.workflow import ensure_transition_allowed, ACTIVITY_TRANSITIONS
 
 
 def create_activity(db: Session, data: ActivityCreate):
+    now = datetime.now(timezone.utc).isoformat()
+    payload = data.model_dump()
+    payload.update({"created_at": now, "updated_at": now})
     get_opportunity(db, data.opportunity_id)
-    activity = Activity(**data.model_dump())
+    activity = Activity(**payload)
     db.add(activity)
     db.commit()
     db.refresh(activity)

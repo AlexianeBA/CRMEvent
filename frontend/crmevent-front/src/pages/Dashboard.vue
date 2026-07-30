@@ -6,11 +6,10 @@
 
 <div class="left">
 
-<NextEventCard/>
+
 
 <StatsCard/>
 
-<StatsCard/>
 
 </div>
 
@@ -38,8 +37,6 @@
 
 <script setup>
 import DashboardLayout from "@/layouts/DashboardLayout.vue"
-
-import NextEventCard from "@/components/dashboard/NextEventCard.vue"
 import StatsCard from "@/components/dashboard/StatsCard.vue"
 import UpcomingEvents from "@/components/dashboard/UpcomingEvents.vue"
 import TimelineCard from "@/components/dashboard/TimelineCard.vue"

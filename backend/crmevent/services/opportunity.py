@@ -6,11 +6,16 @@ from crmevent.models.contact import Contact
 from crmevent.models.users import Users
 from crmevent.schemas.opportunity import OpportunityCreate, OpportunityStatus, OpportunityUpdate
 from crmevent.services.workflow import OPPORTUNITY_TRANSITIONS, ensure_transition_allowed, block_if_final_status
+from datetime import datetime, timezone
 
 IMMUTABLE_FIELDS = {"company_id", "contact_id", "commercial_id"}
 
 
 def create_opportunity(db: Session, data: OpportunityCreate):
+    now = datetime.now(timezone.utc).isoformat()
+    payload = data.dict()
+    payload.update({"created_at": now, "updated_at": now})
+    
     company = db.query(Company).filter(Company.id == data.company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail=f"Company {data.company_id} not found")
@@ -23,7 +28,7 @@ def create_opportunity(db: Session, data: OpportunityCreate):
     if not commercial:
         raise HTTPException(status_code=404, detail=f"Commercial {data.commercial_id} not found")
     
-    opportunity = Opportunity(**data.model_dump())
+    opportunity = Opportunity(**payload)
     db.add(opportunity)
     db.commit()
     db.refresh(opportunity)
@@ -62,6 +67,7 @@ def update_opportunity(db: Session, opportunity_id: int, data: OpportunityUpdate
     block_if_final_status(opportunity.status, {"closed_won", "closed_lost"}, "Opportunity")
 
     payload = data.model_dump(exclude_unset=True)
+    payload.update({"updated_at": datetime.now(timezone.utc).isoformat()})
 
     if "company_id" in payload or "contact_id" in payload or "commercial_id" in payload:
         raise HTTPException(status_code=400, detail="Company, contact and commercial are immutable after creation")

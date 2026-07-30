@@ -2,7 +2,9 @@ from pydantic import BaseModel, Field
 
 class CompanyBase(BaseModel):
     name: str
+    address: str | None = None
     city: str | None = None
+
 
 class CompanyCreate(CompanyBase):
     pass

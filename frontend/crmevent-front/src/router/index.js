@@ -3,6 +3,10 @@ import Home from "../pages/Home.vue"
 import Login from "../pages/Login.vue"
 import Register from "../pages/Register.vue"
 import Dashboard from "../pages/Dashboard.vue"
+import Companies from "../pages/Companies.vue"
+import Contact from "../pages/Contacts.vue"
+import Event from "../pages/Events.vue"
+import Quote from "../pages/Quotes.vue"
 
 const routes = [
   {
@@ -21,6 +25,22 @@ const routes = [
     path: "/dashboard",
     component: Dashboard,
   },
+  {
+    path: "/companies",
+    component: Companies,
+  },
+  {
+    path: "/contacts",
+    component: Contact,
+  },
+  {
+    path: "/events",
+    component: Event,
+  },
+  {
+    path: "/quotes",
+    component: Quote,
+  }
 ]
 
 const router = createRouter({
