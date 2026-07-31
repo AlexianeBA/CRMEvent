@@ -9,6 +9,7 @@ class QuoteStatus(str, enum.Enum):
     sent = "sent"
     accepted = "accepted"
     rejected = "rejected"
+    expired = "expired"
     locked = "locked"
 
 class QuoteBase(BaseModel):

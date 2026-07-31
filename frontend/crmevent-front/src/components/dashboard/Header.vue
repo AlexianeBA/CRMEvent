@@ -12,10 +12,6 @@
 
 <div class="actions">
 
-<v-btn color="primary">
-Nouvelle opportunité
-</v-btn>
-
 <v-avatar>
 
 <img

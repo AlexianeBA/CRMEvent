@@ -1,97 +1,80 @@
 <template>
-
-<div class="card">
-
-<div class="toolbar">
-<v-text-field v-model="search" label="Rechercher" variant="solo" class="w-100"></v-text-field>
-
-
-</div>
-
-<table>
-
-<thead>
-
-<tr>
-<th>Numéro</th>
-<th>Titre</th>
-<th>Total</th>
-<th>Statut</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-<tr
-v-for="quote in filteredQuotes"
-:key="quote.id"
->
-
-<td>{{ quote.number }}</td>
-<td>{{ quote.title }}</td>
-<td>{{ quote.total_amount }}</td>
-<td>{{ quote.status }}</td>
-
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
+  <DataTable
+    :items="store.quotes"
+    :columns="columns"
+    :search-fields="['number', 'title', 'status']"
+    :loading="store.loading"
+  >
+    <template #cell-status="{ value }">
+      <v-chip
+        :color="getStatusColor(value)"
+        size="small"
+        variant="tonal"
+      >
+        {{ getStatusLabel(value) }}
+      </v-chip>
+    </template>
+  </DataTable>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from "vue"
+import { onMounted } from "vue"
 import { useQuoteStore } from "@/stores/quotes"
+import DataTable from "@/components/DataTable.vue"
 
 const store = useQuoteStore()
 
-const search = ref("")
+const columns = [
+  {
+    key: "number",
+    label: "Numéro",
+  },
+  {
+    key: "title",
+    label: "Titre",
+  },
+  {
+    key: "total_amount",
+    label: "Total",
+    formatter: (value) =>
+      new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency: "EUR",
+      }).format(Number(value ?? 0)),
+  },
+  {
+    key: "status",
+    label: "Statut",
+  },
+]
+
+function getStatusLabel(status) {
+  const labels = {
+    draft: "Brouillon",
+    sent: "Envoyé",
+    accepted: "Accepté",
+    rejected: "Refusé",
+    expired: "Expiré",
+    locked: "Verrouillé",
+  }
+
+  return labels[status] ?? status
+}
+
+function getStatusColor(status) {
+  const colors = {
+    draft: "grey",
+    sent: "blue",
+    accepted: "green",
+    rejected: "red",
+    expired: "orange",
+    locked: "purple",
+  }
+
+  return colors[status] ?? "grey"
+}
 
 onMounted(() => {
-    store.loadQuotes()
+  store.loadQuotes()
 })
-
-const filteredQuotes = computed(() => {
-  return store.quotes.filter(quote => {
-    const title = quote.title.toLowerCase()
-    return title.includes(search.value.toLowerCase())
-  })
-})
-
 </script>
-
-<style scoped>
-
-.card{
-background:white;
-border-radius:12px;
-padding:25px;
-}
-
-.toolbar{
-margin-bottom:20px;
-}
-
-.search{
-width:350px;
-padding:10px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th,
-td{
-padding:15px;
-text-align:left;
-border-bottom:1px solid #eee;
-}
-
-</style>
