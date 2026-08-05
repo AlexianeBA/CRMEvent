@@ -11,14 +11,16 @@
           icon="mdi-eye-outline"
           variant="text"
           size="small"
-          @click="viewCompany(item)"
+          title="Voir l'entreprise"
+          @click.stop="viewCompany(item)"
         />
 
         <v-btn
           icon="mdi-pencil-outline"
           variant="text"
           size="small"
-          @click="editCompany(item)"
+          title="Modifier l'entreprise"
+          @click.stop="editCompany(item)"
         />
 
         <v-btn
@@ -26,7 +28,8 @@
           variant="text"
           size="small"
           color="error"
-          @click="deleteCompany(item)"
+          title="Supprimer l'entreprise"
+          @click.stop="deleteCompany(item)"
         />
       </div>
     </template>
@@ -36,8 +39,9 @@
 <script setup>
 import { onMounted } from "vue"
 import { useRouter } from "vue-router"
+
 import { useCompanyStore } from "@/stores/company"
-import DataTable from "@/components/DataTable.vue"
+import DataTable from "@/components/common/DataTable.vue"
 
 const router = useRouter()
 const store = useCompanyStore()
@@ -58,14 +62,43 @@ const columns = [
 ]
 
 function viewCompany(company) {
-  router.push(`/companies/${company.id}`)
+  console.log("Bouton voir :", company)
+
+  if (!company?.id) {
+    console.error("L'entreprise ne possède pas d'identifiant :", company)
+    return
+  }
+
+  router.push({
+    name: "CompanyView",
+    params: {
+      id: company.id,
+    },
+  })
 }
 
 function editCompany(company) {
-  router.push(`/companies/${company.id}/edit`)
+  console.log("Bouton modifier :", company)
+
+  if (!company?.id) {
+    console.error("L'entreprise ne possède pas d'identifiant :", company)
+    return
+  }
+
+  router.push({
+    name: "CompanyEdit",
+    params: {
+      id: company.id,
+    },
+  })
 }
 
 async function deleteCompany(company) {
+  if (!company?.id) {
+    console.error("L'entreprise ne possède pas d'identifiant :", company)
+    return
+  }
+
   const confirmed = window.confirm(
     `Supprimer l'entreprise ${company.name} ?`,
   )
@@ -74,7 +107,14 @@ async function deleteCompany(company) {
     return
   }
 
-  await store.deleteCompany(company.id)
+  try {
+    await store.deleteCompany(company.id)
+  } catch (error) {
+    console.error(
+      "Erreur pendant la suppression de l'entreprise :",
+      error,
+    )
+  }
 }
 
 onMounted(() => {
@@ -85,6 +125,7 @@ onMounted(() => {
 <style scoped>
 .action-buttons {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 4px;
 }

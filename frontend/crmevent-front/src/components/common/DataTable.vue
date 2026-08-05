@@ -155,4 +155,10 @@ th {
   text-align: center;
   color: #777;
 }
+.actions-column,
+.actions-cell {
+  width: 140px;
+  text-align: right;
+  white-space: nowrap;
+}
 </style>
