@@ -37,5 +37,8 @@ def update(company_id: int, data: CompanyUpdate, db: Session = Depends(get_db), 
 
 @router.delete("/{company_id}", status_code=204)
 def delete(company_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    if not service.delete_company(db, company_id):
+    deleted = service.delete_company(db, company_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Not found")
+    return {"detail": (f"Company {company_id} "f"deleted successfully"),
+    }

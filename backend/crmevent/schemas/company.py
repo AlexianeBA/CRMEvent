@@ -6,14 +6,14 @@ class CompanyBase(BaseModel):
     address: str | None = None
     city: str | None = None
 
-
 class CompanyCreate(CompanyBase):
-    contact_id: int | None = None
+    contact_ids: list[int] = Field(default_factory=list)
 
 class CompanyUpdate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     city: str = Field(..., min_length=1, max_length=255)
     address: str = Field(..., min_length=1, max_length=255)
+    contact_ids: list[int] | None = None
 
 class CompanyRead(CompanyBase):
     id: int

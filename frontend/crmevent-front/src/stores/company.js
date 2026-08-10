@@ -22,6 +22,10 @@ export const useCompanyStore = defineStore("company", {
                 this.loading = false
             }
 
+        },
+        async deleteCompany(id) {
+            await companyService.delete(id)
+            await this.loadCompanies()
         }
 
     }

@@ -7,9 +7,13 @@
         <p>Gestion des contacts clients</p>
       </div>
 
-      <button class="btn-primary">
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-plus"
+        @click="goToCreate"
+      >
         Nouveau contact
-      </button>
+      </v-btn>
     </div>
 
     <ContactTable />
@@ -18,8 +22,17 @@
 </template>
 
 <script setup>
+import { useRouter } from "vue-router"
 import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import ContactTable from "@/components/contact/ContactTable.vue"
+
+const router = useRouter()
+
+function goToCreate() {
+  router.push({
+    name: "ContactCreate",
+  })
+}
 </script>
 
 <style scoped>

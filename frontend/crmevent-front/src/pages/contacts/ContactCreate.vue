@@ -1,15 +1,15 @@
 <template>
   <DashboardLayout>
     <EditPage
-      title="Nouvelle entreprise"
-      breadcrumb="Entreprises / Création"
+      title="Nouveau contact"
+      breadcrumb="Contacts / Création"
       :saving="saving"
       :error="error"
       @submit="submit"
       @cancel="goBack"
     >
-      <CompanyForm
-        ref="companyFormRef"
+      <ContactForm
+        ref="contactFormRef"
         v-model="form"
       />
     </EditPage>
@@ -22,28 +22,29 @@ import { useRouter } from "vue-router"
 
 import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import EditPage from "@/components/common/EditPage.vue"
-import CompanyForm from "@/components/company/CompanyForm.vue"
-import { companyService } from "@/services/companyService"
+import ContactForm from "@/components/contact/ContactForm.vue"
+import { contactService } from "@/services/contactService"
 
 const router = useRouter()
 
-const companyFormRef = ref(null)
+const contactFormRef = ref(null)
 
 const saving = ref(false)
 const error = ref("")
 
 const form = ref({
-  name: "",
-  address: "",
-  city: "",
-  contacts: [],
+  firstName: "",
+  lastName: "",
+  email: "",
+  phoneNumber: "",
+  companyId: null,
 })
 
 async function submit() {
   error.value = ""
 
   const isValid =
-    await companyFormRef.value?.validate()
+    await contactFormRef.value?.validate()
 
   if (!isValid) {
     error.value =
@@ -54,32 +55,25 @@ async function submit() {
   saving.value = true
 
   try {
-    const createdCompany =
-      await companyService.create(buildPayload())
+    const createdContact =
+      await contactService.create(buildPayload())
 
-    if (createdCompany?.id) {
-      router.push({
-        name: "CompanyView",
-        params: {
-          id: createdCompany.id,
-        },
-      })
-
-      return
-    }
+    await router.push({
+      name: "Contacts",
+    })
 
     router.push({
-      name: "Companies",
+      name: "Contacts",
     })
   } catch (err) {
     console.error(
-      "Erreur pendant la création de l'entreprise :",
+      "Erreur pendant la création du contact :",
       err,
     )
 
     error.value =
       err.response?.data?.detail ??
-      "Impossible de créer l'entreprise"
+      "Impossible de créer le contact"
   } finally {
     saving.value = false
   }
@@ -87,13 +81,30 @@ async function submit() {
 
 function buildPayload() {
   return {
-    name: form.value.name.trim(),
-    address: normalizeOptionalValue(form.value.address),
-    city: normalizeOptionalValue(form.value.city),
-    contact_ids: form.value.contacts.map(
-      (contact) => contact.id,
+    first_name: form.value.firstName.trim(),
+    last_name: form.value.lastName.trim(),
+    email: normalizeOptionalValue(
+      form.value.email,
+    ),
+    phone_number: normalizeOptionalValue(
+      form.value.phoneNumber,
+    ),
+    company_id: normalizeCompanyId(
+      form.value.companyId,
     ),
   }
+}
+
+function normalizeCompanyId(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null
+  }
+
+  return Number(value)
 }
 
 function normalizeOptionalValue(value) {
@@ -104,7 +115,7 @@ function normalizeOptionalValue(value) {
 
 function goBack() {
   router.push({
-    name: "Companies",
+    name: "Contacts",
   })
 }
 </script>

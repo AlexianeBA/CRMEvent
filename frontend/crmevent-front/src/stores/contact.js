@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import companyService from "@/services/contactService"
+import contactService from "@/services/contactService"
 
 export const useContactStore = defineStore("contact", {
 
@@ -15,13 +15,17 @@ export const useContactStore = defineStore("contact", {
             this.loading = true
 
             try{
-                this.contacts = await companyService.getContacts()
+                this.contacts = await contactService.getContacts()
             }
 
             finally{
                 this.loading = false
             }
 
+        },
+        async deleteContact(id) {
+            await contactService.delete(id)
+            await this.loadContacts()
         }
 
     }

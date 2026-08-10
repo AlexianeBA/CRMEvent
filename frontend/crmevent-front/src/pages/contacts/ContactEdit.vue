@@ -10,20 +10,20 @@
         size="48"
       />
 
-      <p>Chargement de l'entreprise...</p>
+      <p>Chargement du contact...</p>
     </div>
 
     <EditPage
       v-else
-      title="Modifier l'entreprise"
-      breadcrumb="Entreprises / Modification"
+      title="Modifier le contact"
+      breadcrumb="Contacts / Modification"
       :saving="saving"
       :error="error"
       @submit="submit"
       @cancel="goBack"
     >
-      <CompanyForm
-        ref="companyFormRef"
+      <ContactForm
+        ref="contactFormRef"
         v-model="form"
       />
     </EditPage>
@@ -36,30 +36,31 @@ import { useRoute, useRouter } from "vue-router"
 
 import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import EditPage from "@/components/common/EditPage.vue"
-import CompanyForm from "@/components/company/CompanyForm.vue"
-import { companyService } from "@/services/companyService"
+import ContactForm from "@/components/contact/ContactForm.vue"
+import { contactService } from "@/services/contactService"
 
 const route = useRoute()
 const router = useRouter()
 
-const companyFormRef = ref(null)
+const contactFormRef = ref(null)
 
 const loading = ref(false)
 const saving = ref(false)
 const error = ref("")
 
 const form = ref({
-  name: "",
-  address: "",
-  city: "",
-  contacts: [],
+  firstName: "",
+  lastName: "",
+  email: "",
+  phoneNumber: "",
+  companyId: null,
 })
 
-async function loadCompany() {
-  const companyId = route.params.id
+async function loadContact() {
+  const contactId = route.params.id
 
-  if (!companyId) {
-    error.value = "L'identifiant de l'entreprise est manquant"
+  if (!contactId) {
+    error.value = "L'identifiant du contact est manquant"
     return
   }
 
@@ -67,28 +68,24 @@ async function loadCompany() {
   error.value = ""
 
   try {
-    const company = await companyService.getById(companyId)
+    const contact = await contactService.getById(contactId)
 
     Object.assign(form.value, {
-    name: company.name ?? "",
-    address: company.address ?? "",
-    city: company.city ?? "",
-    contacts: (company.contacts ?? []).map(
-      (contact) => ({
-        id: contact.id,
-        label: `${contact.first_name} ${contact.last_name}`,
-      }),
-    ),
-  })
-  } catch (err) {
+    firstName: contact.first_name ?? "",
+    lastName: contact.last_name ?? "",
+    email: contact.email ?? "",
+    phoneNumber: contact.phone_number ?? "",
+    companyId: contact.company_id ?? null,
+    })
+    } catch (err) {
     console.error(
-      "Erreur pendant le chargement de l'entreprise :",
+      "Erreur pendant le chargement du contact :",
       err,
     )
 
     error.value =
       err.response?.data?.detail ??
-      "Impossible de charger l'entreprise"
+      "Impossible de charger le contact"
   } finally {
     loading.value = false
   }
@@ -98,7 +95,7 @@ async function submit() {
   error.value = ""
 
   const isValid =
-    await companyFormRef.value?.validate()
+    await contactFormRef.value?.validate()
 
   if (!isValid) {
     error.value =
@@ -109,27 +106,27 @@ async function submit() {
   saving.value = true
 
   try {
-    const updatedCompany =
-      await companyService.update(
+    const updatedContact =
+      await contactService.update(
         route.params.id,
         buildPayload(),
       )
 
     router.push({
-      name: "CompanyView",
+      name: "ContactView",
       params: {
-        id: updatedCompany?.id ?? route.params.id,
+        id: updatedContact?.id ?? route.params.id,
       },
     })
   } catch (err) {
     console.error(
-      "Erreur pendant la modification de l'entreprise :",
+      "Erreur pendant la modification du contact :",
       err,
     )
 
     error.value =
       err.response?.data?.detail ??
-      "Impossible de modifier l'entreprise"
+      "Impossible de modifier le contact"
   } finally {
     saving.value = false
   }
@@ -137,15 +134,16 @@ async function submit() {
 
 function buildPayload() {
   return {
-    name: form.value.name.trim(),
-    address: normalizeOptionalValue(
-      form.value.address,
+    first_name: form.value.firstName.trim(),
+    last_name: form.value.lastName.trim(),
+    email: normalizeOptionalValue(
+      form.value.email,
     ),
-    city: normalizeOptionalValue(
-      form.value.city,
+    phone_number: normalizeOptionalValue(
+      form.value.phoneNumber,
     ),
-    contact_ids: form.value.contacts.map(
-      (contact) => contact.id,
+    company_id: normalizeCompanyId(
+      form.value.companyId,
     ),
   }
 }
@@ -158,14 +156,14 @@ function normalizeOptionalValue(value) {
 
 function goBack() {
   router.push({
-    name: "CompanyView",
+    name: "ContactView",
     params: {
       id: route.params.id,
     },
   })
 }
 
-onMounted(loadCompany)
+onMounted(loadContact)
 </script>
 
 <style scoped>

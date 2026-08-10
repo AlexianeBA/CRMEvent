@@ -32,11 +32,18 @@ def get(contact_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Not found")
     return contact
 
+@router.patch("/{contact_id}", response_model=ContactRead)
+def update(contact_id: int, data: ContactCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    contact = service.get_contact(db, contact_id, data)
+    if not contact:
+        raise HTTPException(status_code=404, detail="Not found")
+    return service.update_contact(db, contact, data)
 
 @router.delete("/{contact_id}", response_model=dict)
 def delete(contact_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    contact = service.get_contact(db, contact_id)
-    if not contact:
+    deleted = service.delete_contact(db, contact_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Not found")
-    service.delete_contact(db, contact)
-    return {"detail": f"Contact {contact_id} deleted successfully"}
+
+    return {"detail": (f"Contact {contact_id} "f"deleted successfully"),
+    }

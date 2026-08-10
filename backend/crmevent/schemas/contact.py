@@ -17,8 +17,16 @@ class ContactUpdate(BaseModel):
     phone_number: str | None = Field(default=None, max_length=20)
     company_id: int | None = None
 
+class ContactCompanyRead(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+
 class ContactRead(ContactBase):
     id: int
+    company: ContactCompanyRead | None = None
 
     class Config:
         from_attributes = True

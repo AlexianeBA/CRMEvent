@@ -3,7 +3,7 @@ import Home from "../pages/Home.vue"
 import Login from "../pages/Login.vue"
 import Register from "../pages/Register.vue"
 import Dashboard from "../pages/Dashboard.vue"
-import Contact from "../pages/Contacts.vue"
+import Contact from "../pages/contacts/ContactList.vue"
 import Event from "../pages/Events.vue"
 import Quote from "../pages/Quotes.vue"
 
@@ -50,7 +50,27 @@ const routes = [
   },
   {
     path: "/contacts",
-    component: Contact,
+    name: "Contacts",
+    component: () =>
+        import("@/pages/contacts/ContactList.vue"),
+  },
+  {
+    path: "/contacts/new",
+    name: "ContactCreate",
+    component: () =>
+      import("@/pages/contacts/ContactCreate.vue"),
+  },
+  {
+    path: "/contacts/:id/edit",
+    name: "ContactEdit",
+    component: () =>
+      import("@/pages/contacts/ContactEdit.vue"),
+  },
+   {
+    path: "/contacts/:id",
+    name: "ContactView",
+    component: () =>
+      import("@/pages/contacts/ContactView.vue"),
   },
   {
     path: "/events",
