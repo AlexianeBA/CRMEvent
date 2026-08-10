@@ -1,7 +1,10 @@
 __pycache__
 *.pyc
 *.pyo
-crm.db
 .DS_Store
 .env
-alembic/versions/*.py
+backend/alembic/versions/__pycache__/
+backend/alembic/versions/*.py
+backend/data/*.db
+backend/data/*.db.*
+crm.db
