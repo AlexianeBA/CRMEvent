@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { getEvents } from "@/services/eventService";
+import eventService  from "@/services/eventService";
 
 export const useEventStore = defineStore("event", {
   state: () => ({
@@ -16,15 +16,21 @@ export const useEventStore = defineStore("event", {
   },
 
   actions: {
-    async loadEvents() {
-      this.loading = true;
+      async loadEvents() {
+        this.loading = true
 
-      try {
-        const response = await getEvents();
-        this.events = response.data;
-      } finally {
-        this.loading = false;
-      }
+        try {
+          this.events =
+            await eventService.getEvents()
+        } finally {
+          this.loading = false
+        }
+      },
+
+      async deleteEvent(id) {
+        await eventService.delete(id)
+        await this.loadEvents()
+      },
     },
   },
-});
+)

@@ -7,9 +7,13 @@
         <p>Gestion des événements</p>
       </div>
 
-      <button class="btn-primary">
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-plus"
+        @click="goToCreate"
+      >
         Nouvel événement
-      </button>
+      </v-btn>
     </div>
 
     <EventTable />
@@ -20,6 +24,15 @@
 <script setup>
 import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import EventTable from "@/components/event/EventTable.vue"
+import { useRouter } from "vue-router"
+
+const router = useRouter()
+
+function goToCreate() {
+  router.push({
+    name: "EventCreate",
+  })
+}
 </script>
 
 <style scoped>

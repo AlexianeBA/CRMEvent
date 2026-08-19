@@ -4,7 +4,7 @@ import Login from "../pages/Login.vue"
 import Register from "../pages/Register.vue"
 import Dashboard from "../pages/Dashboard.vue"
 import Contact from "../pages/contacts/ContactList.vue"
-import Event from "../pages/Events.vue"
+import Event from "../pages/events/EventList.vue"
 import Quote from "../pages/Quotes.vue"
 
 const routes = [
@@ -74,7 +74,27 @@ const routes = [
   },
   {
     path: "/events",
-    component: Event,
+    name: "Events",
+    component: () =>
+      import("@/pages/events/EventList.vue"),
+  },
+  {
+    path: "/events/new",
+    name: "EventCreate",
+    component: () =>
+      import("@/pages/events/EventCreate.vue"),
+  },
+  {
+    path: "/events/:id/edit",
+    name: "EventEdit",
+    component: () =>
+      import("@/pages/events/EventEdit.vue"),
+  },
+  {
+    path: "/events/:id",
+    name: "EventView",
+    component: () =>
+      import("@/pages/events/EventView.vue"),
   },
   {
     path: "/quotes",
