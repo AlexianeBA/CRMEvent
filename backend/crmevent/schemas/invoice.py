@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 import enum
 
@@ -21,6 +23,35 @@ class InvoiceBase(BaseModel):
 class InvoiceCreate(InvoiceBase):
     pass
 
+class InvoiceCompanyRead(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+
+class InvoiceQuoteRead(BaseModel):
+    id: int
+    number: str
+    title: str
+
+    class Config:
+        from_attributes = True
+
+class InvoiceOpportunityRead(BaseModel):
+    id: int
+    title: str
+
+    class Config:
+        from_attributes = True
+
+class InvoiceUserRead(BaseModel):
+    id: int
+    email: str
+
+    class Config:
+        from_attributes = True
+
 class InvoiceRead(InvoiceBase):
     id: int
     number: str
@@ -31,6 +62,12 @@ class InvoiceRead(InvoiceBase):
     quote_id: int | None
     opportunity_id: int
     assigned_user_id: int
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    company: InvoiceCompanyRead
+    quote: InvoiceQuoteRead
+    opportunity: InvoiceOpportunityRead
+    assigned_user: InvoiceUserRead
 
     class Config:
         from_attributes = True
@@ -40,4 +77,3 @@ class InvoiceUpdate(BaseModel):
     total_amount: float | None = Field(default=None, gt=0)
     status: InvoiceStatus | None = None
     
-

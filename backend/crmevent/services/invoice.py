@@ -1,10 +1,7 @@
 from sqlalchemy.orm import Session
 from crmevent.models.invoice import Invoice
 from crmevent.models.quote import Quote
-from crmevent.schemas.invoice import InvoiceCreate, InvoiceUpdate, InvoiceStatus
-from crmevent.services.company import get_company
-from crmevent.services.opportunity import get_opportunity
-from crmevent.services.event import get_event
+from crmevent.schemas.invoice import InvoiceUpdate, InvoiceStatus
 from crmevent.models.users import Users
 from sqlalchemy import asc, desc
 
@@ -14,7 +11,10 @@ from fastapi import HTTPException
 from crmevent.services.workflow import ensure_transition_allowed, INVOICE_TRANSITIONS
 
 
-IMMUTABLE_FIELDS_AFTER_SENT = {"quote_id", "company_id", "opportunity_id", "assigned_user_id", "number"}
+IMMUTABLE_FIELDS_AFTER_SENT = {
+    "quote_id", "company_id", "opportunity_id", "assigned_user_id",
+    "number", "title", "total_amount",
+}
 
 def generate_invoice_number(db: Session):
     last_invoice = db.query(Invoice).order_by(Invoice.id.desc()).first()
@@ -28,7 +28,16 @@ def generate_invoice_number(db: Session):
 
     return f"INV-{last_number + 1:04d}"
 
-def create_invoice_from_quote(db: Session, quote_id: int, user_id: int):
+def create_invoice_from_quote(db: Session, quote_id: int):
+    existing_invoice = (
+        db.query(Invoice)
+        .filter(Invoice.quote_id == quote_id)
+        .first()
+    )
+
+    if existing_invoice:
+        return existing_invoice
+
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
 
     if not quote:
@@ -37,7 +46,7 @@ def create_invoice_from_quote(db: Session, quote_id: int, user_id: int):
     if quote.status != "accepted":
         raise HTTPException(status_code=400, detail="Quote must be accepted")
 
-    user = db.query(Users).filter(Users.id == user_id).first()
+    user = db.query(Users).filter(Users.id == quote.assigned_user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -48,7 +57,7 @@ def create_invoice_from_quote(db: Session, quote_id: int, user_id: int):
         company_id=quote.company_id,
         quote_id=quote.id,
         opportunity_id=quote.opportunity_id,
-        assigned_user_id=user_id,
+        assigned_user_id=quote.assigned_user_id,
         status="draft",
     )
 
@@ -149,3 +158,4 @@ def delete_invoice(db: Session, invoice: Invoice):
         )
 
     db.delete(invoice)
+    db.commit()
