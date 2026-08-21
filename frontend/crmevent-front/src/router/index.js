@@ -3,9 +3,6 @@ import Home from "../pages/Home.vue"
 import Login from "../pages/Login.vue"
 import Register from "../pages/Register.vue"
 import Dashboard from "../pages/Dashboard.vue"
-import Contact from "../pages/contacts/ContactList.vue"
-import Event from "../pages/events/EventList.vue"
-import Quote from "../pages/Quotes.vue"
 
 const routes = [
   {
@@ -79,6 +76,30 @@ const routes = [
       import("@/pages/events/EventList.vue"),
   },
   {
+    path: "/opportunities",
+    name: "Opportunities",
+    component: () =>
+      import("@/pages/opportunities/OpportunityList.vue"),
+  },
+  {
+    path: "/opportunities/new",
+    name: "OpportunityCreate",
+    component: () =>
+      import("@/pages/opportunities/OpportunityCreate.vue"),
+  },
+  {
+    path: "/opportunities/:id/edit",
+    name: "OpportunityEdit",
+    component: () =>
+      import("@/pages/opportunities/OpportunityEdit.vue"),
+  },
+  {
+    path: "/opportunities/:id",
+    name: "OpportunityView",
+    component: () =>
+      import("@/pages/opportunities/OpportunityView.vue"),
+  },
+  {
     path: "/events/new",
     name: "EventCreate",
     component: () =>
@@ -97,9 +118,47 @@ const routes = [
       import("@/pages/events/EventView.vue"),
   },
   {
-    path: "/quotes",
-    component: Quote,
-  }
+  path: "/quotes",
+  name: "Quotes",
+  component: () =>
+    import("@/pages/quotes/QuoteList.vue"),
+  },
+  {
+    path: "/quotes/new",
+    name: "QuoteCreate",
+    component: () =>
+      import("@/pages/quotes/QuoteCreate.vue"),
+  },
+  {
+    path: "/quotes/:id/edit",
+    name: "QuoteEdit",
+    component: () =>
+      import("@/pages/quotes/QuoteEdit.vue"),
+  },
+  {
+    path: "/quotes/:id",
+    name: "QuoteView",
+    component: () =>
+      import("@/pages/quotes/QuoteView.vue"),
+  },
+  {
+    path: "/invoices",
+    name: "Invoices",
+    component: () =>
+      import("@/pages/invoices/InvoiceList.vue"),
+  },
+  {
+    path: "/invoices/:id/edit",
+    name: "InvoiceEdit",
+    component: () =>
+      import("@/pages/invoices/InvoiceEdit.vue"),
+  },
+  {
+    path: "/invoices/:id",
+    name: "InvoiceView",
+    component: () =>
+      import("@/pages/invoices/InvoiceView.vue"),
+  },
 ]
 
 const router = createRouter({
