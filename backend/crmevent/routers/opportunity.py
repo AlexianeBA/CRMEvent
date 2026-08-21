@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
-from crmevent.schemas.opportunity import OpportunityCreate, OpportunityRead,OpportunityStatus, OpportunityStatusUpdate, OpportunityUpdate
-from crmevent.models.opportunity import Opportunity
+from crmevent.schemas.opportunity import OpportunityCreate, OpportunityRead, OpportunityStatus, OpportunityUpdate
 from crmevent.services import opportunity as service
 from crmevent.core.security import get_current_user
 
@@ -19,8 +18,8 @@ def list_all(
     contact_id: int | None = Query(default=None),
     status: OpportunityStatus | None = Query(default=None),
     commercial_id: int | None = Query(default=None),
-    sort_by: str = Query(default="created_at", regex="^(title|amount|status|created_at|updated_at)$"),
-    sort_order: str = Query(default="desc", regex="^(asc|desc)$"),
+    sort_by: str = Query(default="created_at", pattern="^(title|amount|status|created_at|updated_at)$"),
+    sort_order: str = Query(default="desc", pattern="^(asc|desc)$"),
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=10, ge=1, le=100)
 ):

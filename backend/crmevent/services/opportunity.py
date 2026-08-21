@@ -14,7 +14,7 @@ IMMUTABLE_FIELDS = {"company_id", "contact_id", "commercial_id"}
 def create_opportunity(db: Session, data: OpportunityCreate):
     now = datetime.now(timezone.utc).isoformat()
     payload = data.dict()
-    payload.update({"created_at": now, "updated_at": now})
+    payload.update({"status": "new", "created_at": now, "updated_at": now})
     
     company = db.query(Company).filter(Company.id == data.company_id).first()
     if not company:
@@ -23,6 +23,12 @@ def create_opportunity(db: Session, data: OpportunityCreate):
     contact = db.query(Contact).filter(Contact.id == data.contact_id).first()
     if not contact:
         raise HTTPException(status_code=404, detail=f"Contact {data.contact_id} not found")
+
+    if contact.company_id != company.id:
+        raise HTTPException(
+            status_code=400,
+            detail="The contact does not belong to the selected company",
+        )
     
     commercial = db.query(Users).filter(Users.id == data.commercial_id).first()
     if not commercial:
@@ -98,6 +104,21 @@ def delete_opportunity(db: Session, opportunity_id: int):
     if not opportunity:
         raise HTTPException(status_code=404, detail=f"Opportunity {opportunity_id} not found")
     block_if_final_status(opportunity.status, {"closed_won", "closed_lost"}, "Opportunity")
+
+    dependencies = []
+    if opportunity.activities:
+        dependencies.append("activités")
+    if opportunity.events:
+        dependencies.append("événements")
+    if opportunity.quotes:
+        dependencies.append("devis")
+    if opportunity.invoices:
+        dependencies.append("factures")
+    if dependencies:
+        raise HTTPException(
+            status_code=409,
+            detail="Suppression impossible : l'opportunité est utilisée par " + ", ".join(dependencies),
+        )
 
     db.delete(opportunity)
     db.commit()
