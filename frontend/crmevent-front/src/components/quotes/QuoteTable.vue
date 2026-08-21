@@ -20,14 +20,15 @@
           icon="mdi-eye-outline"
           variant="text"
           size="small"
-          @click="viewQuote(item)"
+          @click.stop="viewQuote(item)"
         />
 
         <v-btn
           icon="mdi-pencil-outline"
           variant="text"
           size="small"
-          @click="editQuote(item)"
+          :disabled="!canEdit(item)"
+          @click.stop="editQuote(item)"
         />
 
         <v-btn
@@ -35,7 +36,8 @@
           variant="text"
           size="small"
           color="error"
-          @click="deleteQuote(item)"
+          :disabled="item.status !== 'draft'"
+          @click.stop="deleteQuote(item)"
         />
       </div>
     </template>
@@ -108,6 +110,10 @@ function editQuote(quote) {
   router.push(`/quotes/${quote.id}/edit`)
 }
 
+function canEdit(quote) {
+  return ["draft", "sent"].includes(quote.status)
+}
+
 async function deleteQuote(quote) {
   const confirmed = window.confirm(
     `Supprimer le devis ${quote.number} ?`,
@@ -117,7 +123,12 @@ async function deleteQuote(quote) {
     return
   }
 
-  await store.deleteQuote(quote.id)
+  try {
+    await store.deleteQuote(quote.id)
+  } catch (error) {
+    console.error("Erreur pendant la suppression du devis :", error)
+    window.alert(error.response?.data?.detail ?? "Impossible de supprimer le devis")
+  }
 }
 
 onMounted(() => {

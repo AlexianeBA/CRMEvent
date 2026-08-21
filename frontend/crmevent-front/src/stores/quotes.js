@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import companyService from "@/services/quotesService"
+import quoteService from "@/services/quotesService"
 
 export const useQuoteStore = defineStore("quote", {
 
@@ -15,13 +15,18 @@ export const useQuoteStore = defineStore("quote", {
             this.loading = true
 
             try{
-                this.quotes = await companyService.getQuotes()
+                this.quotes = await quoteService.getQuotes()
             }
 
             finally{
                 this.loading = false
             }
 
+        },
+
+        async deleteQuote(id) {
+            await quoteService.delete(id)
+            await this.loadQuotes()
         }
 
     }

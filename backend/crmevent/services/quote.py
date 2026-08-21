@@ -59,6 +59,7 @@ def create_quote(db: Session, data: QuoteCreate):
         raise HTTPException(status_code=404, detail=f"Event {data.event_id} not found")
     payload = data.model_dump()
     payload["number"] = generate_quote_number(db)
+    payload["status"] = QuoteStatus.draft
     quote = Quote(**payload)
     db.add(quote)
     db.commit()

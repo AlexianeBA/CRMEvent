@@ -27,11 +27,48 @@ class QuoteUpdate(BaseModel):
     total_amount: Optional[Decimal] = Field(None, gt=0)
     status: Optional[QuoteStatus] = Field(None, description="Status of the quote")
     
-class QuoteCreate(QuoteBase):
-    pass
+class QuoteCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
+    total_amount: Decimal = Field(..., gt=0)
+    company_id: int = Field(..., gt=0)
+    opportunity_id: int = Field(..., gt=0)
+    assigned_user_id: int = Field(..., gt=0)
+    event_id: Optional[int] = Field(default=None, gt=0)
+
+class QuoteCompanyRead(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+
+class QuoteOpportunityRead(BaseModel):
+    id: int
+    title: str
+
+    class Config:
+        from_attributes = True
+
+class QuoteUserRead(BaseModel):
+    id: int
+    email: str
+
+    class Config:
+        from_attributes = True
+
+class QuoteEventRead(BaseModel):
+    id: int
+    title: str
+
+    class Config:
+        from_attributes = True
 
 class QuoteRead(QuoteBase):
     id: int
+    company: QuoteCompanyRead
+    opportunity: QuoteOpportunityRead
+    assigned_user: QuoteUserRead
+    event: QuoteEventRead | None = None
 
     class Config:
         from_attributes = True
