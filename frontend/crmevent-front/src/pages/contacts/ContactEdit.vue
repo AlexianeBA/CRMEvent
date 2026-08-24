@@ -154,6 +154,14 @@ function normalizeOptionalValue(value) {
   return normalizedValue || null
 }
 
+function normalizeCompanyId(value) {
+  if (value === null || value === undefined || value === "") {
+    return null
+  }
+
+  return Number(value)
+}
+
 function goBack() {
   router.push({
     name: "ContactView",

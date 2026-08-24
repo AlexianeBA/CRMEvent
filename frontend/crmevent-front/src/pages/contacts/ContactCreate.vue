@@ -59,11 +59,8 @@ async function submit() {
       await contactService.create(buildPayload())
 
     await router.push({
-      name: "Contacts",
-    })
-
-    router.push({
-      name: "Contacts",
+      name: "ContactView",
+      params: { id: createdContact.id },
     })
   } catch (err) {
     console.error(

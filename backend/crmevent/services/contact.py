@@ -1,10 +1,31 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from crmevent.models.contact import Contact
+from crmevent.models.company import Company
 from crmevent.schemas.contact import ContactCreate, ContactUpdate
+from fastapi import HTTPException
+
+
+def _ensure_company_exists(db: Session, company_id: int | None):
+    if company_id is None:
+        return
+
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail=f"Entreprise {company_id} introuvable")
+
+
+def _ensure_email_available(db: Session, email: str, contact_id: int | None = None):
+    query = db.query(Contact).filter(Contact.email == email)
+    if contact_id is not None:
+        query = query.filter(Contact.id != contact_id)
+    if query.first():
+        raise HTTPException(status_code=409, detail="Un contact utilise déjà cette adresse email")
 
 def create_contact(db: Session, data: ContactCreate):
-    contact = Contact(**data.dict())
+    _ensure_company_exists(db, data.company_id)
+    _ensure_email_available(db, data.email)
+    contact = Contact(**data.model_dump())
     db.add(contact)
     db.commit()
     db.refresh(contact)
@@ -39,7 +60,15 @@ def update_contact(db: Session, contact_id: int, data: ContactUpdate):
     if not contact:
         return None
 
-    for field, value in data.model_dump(exclude_unset=True).items():
+    payload = data.model_dump(exclude_unset=True)
+    if "company_id" in payload:
+        _ensure_company_exists(db, payload["company_id"])
+    if "email" in payload:
+        if payload["email"] is None:
+            raise HTTPException(status_code=422, detail="L'adresse email est obligatoire")
+        _ensure_email_available(db, payload["email"], contact_id)
+
+    for field, value in payload.items():
         setattr(contact, field, value)
 
     db.commit()
@@ -52,6 +81,17 @@ def delete_contact(db: Session, contact_id: int):
 
     if not contact:
         return False
+
+    dependencies = []
+    if contact.opportunities:
+        dependencies.append("opportunités")
+    if contact.events:
+        dependencies.append("événements")
+    if dependencies:
+        raise HTTPException(
+            status_code=409,
+            detail="Suppression impossible : le contact est utilisé par " + ", ".join(dependencies),
+        )
 
     db.delete(contact)
     db.commit()

@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 class ContactBase(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
-    email: str | None = None
+    email: str = Field(..., min_length=3, max_length=255)
     phone_number: str | None = Field(default=None, max_length=20)
     company_id: int | None = Field(default=None, gt=0)
 
@@ -15,7 +15,7 @@ class ContactUpdate(BaseModel):
     last_name: str | None = Field(default=None, min_length=1, max_length=100)
     email: str | None = Field(default=None, max_length=100)
     phone_number: str | None = Field(default=None, max_length=20)
-    company_id: int | None = None
+    company_id: int | None = Field(default=None, gt=0)
 
 class ContactCompanyRead(BaseModel):
     id: int
@@ -30,4 +30,3 @@ class ContactRead(ContactBase):
 
     class Config:
         from_attributes = True
-
