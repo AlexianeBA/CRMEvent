@@ -4,16 +4,16 @@
       <v-text-field v-model="model.title" label="Titre du devis" variant="outlined" prepend-inner-icon="mdi-file-document-outline" :rules="[rules.required]" class="full-width" />
       <v-text-field v-model.number="model.totalAmount" label="Montant total" type="number" min="0.01" step="0.01" suffix="€" variant="outlined" prepend-inner-icon="mdi-currency-eur" :rules="[rules.required, rules.positiveAmount]" />
       <v-autocomplete v-model="model.companyId" :items="companies" item-title="name" item-value="id" label="Entreprise" variant="outlined" prepend-inner-icon="mdi-domain" :loading="loadingOptions" :disabled="editing" :rules="[rules.required]" clearable />
-      <v-autocomplete v-model="model.opportunityId" :items="opportunities" item-title="title" item-value="id" label="Opportunité" variant="outlined" prepend-inner-icon="mdi-briefcase-outline" :loading="loadingOptions" :disabled="editing" :rules="[rules.required]" clearable />
+      <v-autocomplete v-model="model.opportunityId" :items="filteredOpportunities" item-title="title" item-value="id" label="Opportunité" variant="outlined" prepend-inner-icon="mdi-briefcase-outline" :loading="loadingOptions" :disabled="editing" :rules="[rules.required]" clearable />
       <v-autocomplete v-model="model.assignedUserId" :items="users" item-title="email" item-value="id" label="Utilisateur assigné" variant="outlined" prepend-inner-icon="mdi-account-tie-outline" :loading="loadingOptions" :disabled="editing" :rules="[rules.required]" clearable />
-      <v-autocomplete v-model="model.eventId" :items="events" item-title="title" item-value="id" label="Événement (optionnel)" variant="outlined" prepend-inner-icon="mdi-calendar-outline" :loading="loadingOptions" :disabled="editing" clearable />
+      <v-autocomplete v-model="model.eventId" :items="filteredEvents" item-title="title" item-value="id" label="Événement (optionnel)" variant="outlined" prepend-inner-icon="mdi-calendar-outline" :loading="loadingOptions" :disabled="editing" clearable />
       <v-alert v-if="optionsError" type="error" variant="tonal" class="full-width">{{ optionsError }}</v-alert>
     </div>
   </v-form>
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 import companyService from "@/services/companyService"
 import eventService from "@/services/eventService"
 import opportunityService from "@/services/opportunityService"
@@ -34,6 +34,21 @@ const rules = {
   required: (value) => Boolean(String(value ?? "").trim()) || "Ce champ est obligatoire",
   positiveAmount: (value) => Number(value) > 0 || "Le montant doit être supérieur à 0",
 }
+
+const filteredOpportunities = computed(() => {
+  if (!model.value.companyId) return []
+  return opportunities.value.filter(
+    (opportunity) => opportunity.company_id === model.value.companyId,
+  )
+})
+
+const filteredEvents = computed(() => {
+  if (!model.value.companyId || !model.value.opportunityId) return []
+  return events.value.filter(
+    (event) => event.company_id === model.value.companyId
+      && event.opportunity_id === model.value.opportunityId,
+  )
+})
 
 async function loadOptions() {
   loadingOptions.value = true

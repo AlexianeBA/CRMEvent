@@ -14,8 +14,8 @@ def create(data: QuoteCreate, db: Session = Depends(get_db), current_user = Depe
     return service.create_quote(db, data)
 
 @router.post("/{quote_id}/accept")
-def accept_quote(quote_id: int, user_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),):
-    quote, invoice = service.accept_quote(db, quote_id, user_id)
+def accept_quote(quote_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),):
+    quote, invoice = service.accept_quote(db, quote_id)
     return {"quote": quote, "invoice": invoice}
 
 @router.get("/{quote_id}", response_model=QuoteRead)

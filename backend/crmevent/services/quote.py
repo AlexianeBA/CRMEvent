@@ -18,7 +18,7 @@ ALLOWED_SORT = {
     "total_amount": Quote.total_amount,
 }
 
-def accept_quote(db: Session, quote_id: int, user_id: int):
+def accept_quote(db: Session, quote_id: int):
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
     if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
@@ -26,7 +26,7 @@ def accept_quote(db: Session, quote_id: int, user_id: int):
     ensure_transition_allowed(QUOTE_TRANSITIONS, quote.status, "accepted", "Quote")
     quote.status = "accepted"
 
-    invoice = create_invoice_from_quote(db, quote.id, user_id)
+    invoice = create_invoice_from_quote(db, quote.id)
     db.commit()
     db.refresh(quote)
     return quote, invoice
@@ -48,15 +48,20 @@ def create_quote(db: Session, data: QuoteCreate):
     if not get_company(db, data.company_id):
         raise HTTPException(status_code=404, detail=f"Company {data.company_id} not found")
 
-    if not get_opportunity(db, data.opportunity_id):
-        raise HTTPException(status_code=404, detail=f"Opportunity {data.opportunity_id} not found")
+    opportunity = get_opportunity(db, data.opportunity_id)
+    if opportunity.company_id != data.company_id:
+        raise HTTPException(status_code=422, detail="L'opportunité n'appartient pas à l'entreprise sélectionnée")
 
     user = db.query(Users).filter(Users.id == data.assigned_user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail=f"User {data.assigned_user_id} not found")
 
-    if data.event_id is not None and not get_event(db, data.event_id):
-        raise HTTPException(status_code=404, detail=f"Event {data.event_id} not found")
+    if data.event_id is not None:
+        event = get_event(db, data.event_id)
+        if not event:
+            raise HTTPException(status_code=404, detail=f"Event {data.event_id} not found")
+        if event.company_id != data.company_id or event.opportunity_id != data.opportunity_id:
+            raise HTTPException(status_code=422, detail="L'événement ne correspond pas à l'entreprise et à l'opportunité sélectionnées")
     payload = data.model_dump()
     payload["number"] = generate_quote_number(db)
     payload["status"] = QuoteStatus.draft

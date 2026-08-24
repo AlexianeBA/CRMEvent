@@ -75,7 +75,7 @@ function changeStatus(status) {
 
 function acceptQuote() {
   return runAction(async () => {
-    const result = await quoteService.accept(route.params.id, quote.value.assigned_user_id)
+    const result = await quoteService.accept(route.params.id)
     quote.value = result.quote
     await router.push({ name: "InvoiceView", params: { id: result.invoice.id } })
   })

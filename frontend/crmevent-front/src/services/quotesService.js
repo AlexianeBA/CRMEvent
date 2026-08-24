@@ -23,14 +23,6 @@ export const quoteService = {
 
     async updateStatus(id, status) {
         const response = await api.patch(
-            `/quotes/${id}/status`,
-            null,
-            { params: { status } },
-        )
-        return response.data
-    },
-    async updateStatus(id, status) {
-        const response = await api.patch(
         `/quotes/${id}/status`,
         null,
         {
@@ -43,15 +35,10 @@ export const quoteService = {
         return response.data
     },
 
-    async accept(id, userId) {
+    async accept(id) {
         const response = await api.post(
         `/quotes/${id}/accept`,
         null,
-        {
-            params: {
-            user_id: userId,
-            },
-        },
         )
 
         return response.data
