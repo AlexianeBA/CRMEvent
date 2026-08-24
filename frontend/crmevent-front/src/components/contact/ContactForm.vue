@@ -36,24 +36,32 @@
         label="Numéro de téléphone"
         variant="outlined"
         prepend-inner-icon="mdi-phone-outline"
-        :rules="[rules.required]"
         class="full-width"
       />
-        <v-text-field
+        <v-autocomplete
           v-model="model.companyId"
-          label="ID de l'entreprise (optionnel)"
-          type="number"
+          :items="companies"
+          item-title="name"
+          item-value="id"
+          label="Entreprise (optionnelle)"
           variant="outlined"
           prepend-inner-icon="mdi-domain"
+          :loading="loadingCompanies"
+          clearable
           class="full-width"
         />
+
+      <p v-if="companiesError" class="full-width form-error">
+        {{ companiesError }}
+      </p>
         
     </div>
   </v-form>
 </template>
 
 <script setup>
-import { ref } from "vue"
+import { onMounted, ref } from "vue"
+import companyService from "@/services/companyService"
 
 const model = defineModel({
   type: Object,
@@ -61,6 +69,9 @@ const model = defineModel({
 })
 
 const formRef = ref(null)
+const companies = ref([])
+const loadingCompanies = ref(false)
+const companiesError = ref("")
 
 const rules = {
   required: (value) =>
@@ -96,6 +107,22 @@ function resetValidation() {
   formRef.value?.resetValidation()
 }
 
+async function loadCompanies() {
+  loadingCompanies.value = true
+  companiesError.value = ""
+
+  try {
+    companies.value = await companyService.getCompanies()
+  } catch (error) {
+    console.error("Erreur de chargement des entreprises :", error)
+    companiesError.value = "Impossible de charger les entreprises"
+  } finally {
+    loadingCompanies.value = false
+  }
+}
+
+onMounted(loadCompanies)
+
 defineExpose({
   validate,
   resetValidation,
@@ -111,6 +138,10 @@ defineExpose({
 
 .full-width {
   grid-column: 1 / -1;
+}
+
+.form-error {
+  color: rgb(var(--v-theme-error));
 }
 
 @media (max-width: 750px) {

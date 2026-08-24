@@ -59,7 +59,7 @@ class InvoiceRead(InvoiceBase):
     total_amount: float
     status: InvoiceStatus
     company_id: int
-    quote_id: int | None
+    quote_id: int
     opportunity_id: int
     assigned_user_id: int
     created_at: datetime | None = None
