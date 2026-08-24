@@ -37,7 +37,7 @@
 
       <v-autocomplete
         v-model="model.opportunityId"
-        :items="opportunities"
+        :items="filteredOpportunities"
         item-title="title"
         item-value="id"
         label="Opportunité"
@@ -78,14 +78,6 @@
         prepend-inner-icon="mdi-clock-outline"
         :rules="[rules.required, rules.positiveNumber]"
     />
-    <v-select
-        v-model="model.status"
-        :items="['draft', 'scheduled', 'held', 'canceled', 'locked']"
-        label="Statut"
-        variant="outlined"
-        prepend-inner-icon="mdi-flag-outline"
-        :rules="[rules.required]"
-    />
     <v-text-field
         v-model="model.location"
         label="Localisation"
@@ -105,7 +97,7 @@
         />
       <v-autocomplete
         v-model="model.contactId"
-        :items="contactOptions"
+        :items="filteredContactOptions"
         item-title="label"
         item-value="id"
         label="Contact (optionnel)"
@@ -163,6 +155,26 @@ const contactOptions = computed(() =>
       .join(" "),
   })),
 )
+
+const filteredOpportunities = computed(() => {
+  if (!model.value.companyId) return []
+
+  return opportunities.value.filter(
+    (opportunity) => opportunity.company_id === model.value.companyId,
+  )
+})
+
+const filteredContactOptions = computed(() => {
+  if (!model.value.companyId) return []
+
+  const allowedIds = new Set(
+    contacts.value
+      .filter((contact) => contact.company_id === model.value.companyId)
+      .map((contact) => contact.id),
+  )
+
+  return contactOptions.value.filter((contact) => allowedIds.has(contact.id))
+})
 
 async function loadOptions() {
   loadingOptions.value = true

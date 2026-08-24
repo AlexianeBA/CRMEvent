@@ -23,22 +23,57 @@ class EventBase(BaseModel):
     location: str = Field(..., min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
     contact_id: int | None = Field(default=None, gt=0)
-    status: EventStatus = EventStatus.draft
 
 class EventCreate(EventBase):
     pass
 
 class EventUpdate(BaseModel):
-    title: str | None = None
-    date: str | None = None
+    title: str | None = Field(default=None, min_length=1, max_length=255)
+    date: str | None = Field(default=None, pattern=r"^\d{2}-\d{2}-\d{4}$")
     type: EventType | None = None
-    duration: int | None = None
-    location: str | None = None
-    description: str | None = None
-class EventRead(EventBase):
+    duration: int | None = Field(default=None, gt=0)
+    location: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=255)
+    company_id: int | None = Field(default=None, gt=0)
+    opportunity_id: int | None = Field(default=None, gt=0)
+    assigned_user_id: int | None = Field(default=None, gt=0)
+    contact_id: int | None = Field(default=None, gt=0)
+
+class EventCompanyRead(BaseModel):
     id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+class EventOpportunityRead(BaseModel):
+    id: int
+    title: str
 
     class Config:
         from_attributes = True
 
-        
+class EventContactRead(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+
+    class Config:
+        from_attributes = True
+
+class EventUserRead(BaseModel):
+    id: int
+    email: str
+
+    class Config:
+        from_attributes = True
+
+class EventRead(EventBase):
+    id: int
+    status: EventStatus
+    company: EventCompanyRead
+    opportunity: EventOpportunityRead
+    contact: EventContactRead | None = None
+    assigned_user: EventUserRead
+
+    class Config:
+        from_attributes = True

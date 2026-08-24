@@ -13,31 +13,37 @@
       :item="event"
       :fields="organizationFields"
     >
-      <template #field-company_id="{ value }">
+      <template #field-company="{ value }">
         <RouterLink
           :to="{
             name: 'CompanyView',
-            params: { id: value },
+            params: { id: value.id },
           }"
           class="detail-link"
         >
-          Entreprise n°{{ value }}
+          {{ value.name }}
         </RouterLink>
       </template>
 
-      <template #field-contact_id="{ value }">
+      <template #field-contact="{ value }">
         <RouterLink
           v-if="value"
           :to="{
             name: 'ContactView',
-            params: { id: value },
+            params: { id: value.id },
           }"
           class="detail-link"
         >
-          Contact n°{{ value }}
+          {{ value.first_name }} {{ value.last_name }}
         </RouterLink>
 
         <strong v-else>—</strong>
+      </template>
+
+      <template #field-opportunity="{ value }">
+        <RouterLink :to="{ name: 'OpportunityView', params: { id: value.id } }" class="detail-link">
+          {{ value.title }}
+        </RouterLink>
       </template>
     </DetailsCard>
 
@@ -110,24 +116,21 @@ const generalFields = [
 
 const organizationFields = [
   {
-    key: "company_id",
+    key: "company",
     label: "Entreprise",
   },
   {
-    key: "contact_id",
+    key: "contact",
     label: "Contact",
   },
   {
-    key: "opportunity_id",
+    key: "opportunity",
     label: "Opportunité",
-    formatter: (value) =>
-      `Opportunité n°${value}`,
   },
   {
-    key: "assigned_user_id",
+    key: "assigned_user",
     label: "Utilisateur assigné",
-    formatter: (value) =>
-      `Utilisateur n°${value}`,
+    formatter: (value) => value?.email ?? "—",
   },
 ]
 

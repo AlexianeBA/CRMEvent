@@ -55,7 +55,6 @@ const form = ref({
   duration: null,
   location: "",
   description: "",
-  status: "",
   companyId: null,
   opportunityId: null,
   assignedUserId: null,
@@ -83,7 +82,6 @@ async function loadEvent() {
       duration: event.duration ?? null,
       location: event.location ?? "",
       description: event.description ?? "",
-      status: event.status ?? "",
       companyId: event.company_id ?? null,
       opportunityId: event.opportunity_id ?? null,
       assignedUserId:
@@ -155,7 +153,10 @@ function buildPayload() {
     description: normalizeOptionalValue(
       form.value.description,
     ),
-    status: form.value.status,
+    company_id: Number(form.value.companyId),
+    opportunity_id: Number(form.value.opportunityId),
+    assigned_user_id: Number(form.value.assignedUserId),
+    contact_id: normalizeOptionalId(form.value.contactId),
   }
 }
 
@@ -186,6 +187,20 @@ function toInputDate(value) {
   }
 
   return value
+}
+
+function normalizeOptionalId(value) {
+  if (value === null || value === undefined || value === "") {
+    return null
+  }
+
+  return Number(value)
+}
+
+function normalizeOptionalValue(value) {
+  const normalized = String(value ?? "").trim()
+
+  return normalized || null
 }
 
 function goBack() {

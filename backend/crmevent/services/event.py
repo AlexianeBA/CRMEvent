@@ -22,17 +22,24 @@ def create_event(db: Session, data: EventCreate):
     if not get_company(db, data.company_id):
         raise HTTPException(status_code=404, detail=f"Company {data.company_id} not found")
 
-    if not get_opportunity(db, data.opportunity_id):
+    opportunity = get_opportunity(db, data.opportunity_id)
+    if not opportunity:
         raise HTTPException(status_code=404, detail=f"Opportunity {data.opportunity_id} not found")
+    if opportunity.company_id != data.company_id:
+        raise HTTPException(status_code=422, detail="L'opportunité n'appartient pas à l'entreprise sélectionnée")
 
     user = db.query(Users).filter(Users.id == data.assigned_user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail=f"User {data.assigned_user_id} not found")
 
-    if data.contact_id is not None and not get_contact(db, data.contact_id):
-        raise HTTPException(status_code=404, detail=f"Contact {data.contact_id} not found")
+    if data.contact_id is not None:
+        contact = get_contact(db, data.contact_id)
+        if not contact:
+            raise HTTPException(status_code=404, detail=f"Contact {data.contact_id} not found")
+        if contact.company_id != data.company_id:
+            raise HTTPException(status_code=422, detail="Le contact n'appartient pas à l'entreprise sélectionnée")
 
-    event = Event(**data.model_dump())
+    event = Event(**data.model_dump(), status="draft")
     db.add(event)
     db.commit()
     db.refresh(event)
@@ -81,6 +88,27 @@ def update_event(db: Session, event: Event, data: EventUpdate):
             raise HTTPException(status_code=400, detail=( "The following fields are immutable after scheduling: "
                     + ", ".join(sorted(forbidden_fields))
                 ),)
+
+    company_id = payload.get("company_id", event.company_id)
+    opportunity_id = payload.get("opportunity_id", event.opportunity_id)
+    contact_id = payload.get("contact_id", event.contact_id)
+    assigned_user_id = payload.get("assigned_user_id", event.assigned_user_id)
+
+    if not get_company(db, company_id):
+        raise HTTPException(status_code=404, detail=f"Company {company_id} not found")
+    opportunity = get_opportunity(db, opportunity_id)
+    if not opportunity:
+        raise HTTPException(status_code=404, detail=f"Opportunity {opportunity_id} not found")
+    if opportunity.company_id != company_id:
+        raise HTTPException(status_code=422, detail="L'opportunité n'appartient pas à l'entreprise sélectionnée")
+    if not db.query(Users).filter(Users.id == assigned_user_id).first():
+        raise HTTPException(status_code=404, detail=f"User {assigned_user_id} not found")
+    if contact_id is not None:
+        contact = get_contact(db, contact_id)
+        if not contact:
+            raise HTTPException(status_code=404, detail=f"Contact {contact_id} not found")
+        if contact.company_id != company_id:
+            raise HTTPException(status_code=422, detail="Le contact n'appartient pas à l'entreprise sélectionnée")
             
     for key, value in payload.items():
         setattr(event, key, value)
@@ -104,5 +132,10 @@ def update_event_status(db: Session, event_id: int, new_status: str):
     return event
 
 def delete_event(db: Session, event: Event):
+    if event.quotes:
+        raise HTTPException(
+            status_code=409,
+            detail="Suppression impossible : l'événement est utilisé par un devis",
+        )
     db.delete(event)
     db.commit()

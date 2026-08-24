@@ -39,7 +39,6 @@ const form = ref({
   duration: null,
   location: "",
   description: "",
-  status: "draft",
   companyId: null,
   opportunityId: null,
   assignedUserId: null,
@@ -71,9 +70,6 @@ async function submit() {
         },
         })
 
-    router.push({
-      name: "Events",
-    })
   } catch (err) {
     console.error(
       "Erreur pendant la création de l'événement :",
@@ -98,7 +94,6 @@ function buildPayload() {
     description: normalizeOptionalValue(
       form.value.description,
     ),
-    status: form.value.status,
     company_id: Number(
       form.value.companyId,
     ),
