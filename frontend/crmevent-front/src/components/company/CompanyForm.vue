@@ -54,7 +54,6 @@
         closable-chips
         clearable
         :loading="loadingContacts"
-        :rules="[rules.atLeastOneContact]"
         class="full-width"
       />
 
@@ -86,9 +85,6 @@ const rules = {
   required: (value) =>
     Boolean(String(value ?? "").trim()) ||
     "Ce champ est obligatoire",
-  atLeastOneContact: (value) =>
-    Array.isArray(value) && value.length > 0 ||
-    "Sélectionne au moins un contact",
 }
 
 const contactOptions = computed(() =>

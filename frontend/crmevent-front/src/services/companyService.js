@@ -4,7 +4,9 @@ export const companyService = {
 
     async getCompanies(){
 
-        const response = await api.get("/companies")
+        const response = await api.get("/companies", {
+            params: { limit: 100 },
+        })
 
         return response.data
 

@@ -127,6 +127,24 @@ def delete_company(db: Session, company_id: int):
     company = db.query(Company).filter(Company.id == company_id).first()
     if not company:
         return False
+
+    dependencies = []
+    if company.opportunities:
+        dependencies.append("opportunités")
+    if company.events:
+        dependencies.append("événements")
+    if company.quotes:
+        dependencies.append("devis")
+    if company.invoices:
+        dependencies.append("factures")
+    if dependencies:
+        raise HTTPException(
+            status_code=409,
+            detail="Suppression impossible : l'entreprise est utilisée par " + ", ".join(dependencies),
+        )
+
+    for contact in company.contacts:
+        contact.company_id = None
     
     db.delete(company)
     db.commit()
