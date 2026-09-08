@@ -13,6 +13,7 @@
         v-if="contact"
         :contact="contact"
       />
+      <HistoryTimeline v-if="contact" entity-type="contact" :entity-id="contact.id" />
     </DetailPage>
   </DashboardLayout>
 </template>
@@ -26,6 +27,7 @@ import DetailPage from "@/components/common/DetailPage.vue"
 import ContactDetails from "@/components/contact/ContactDetails.vue"
 import { contactService } from "@/services/contactService"
 import { useAuthStore } from "@/stores/auth"
+import HistoryTimeline from "@/components/history/HistoryTimeline.vue"
 
 const route = useRoute()
 const router = useRouter()

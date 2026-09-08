@@ -5,13 +5,18 @@ from crmevent.db.base import get_db
 from crmevent.schemas.event import EventCreate, EventRead, EventUpdate, EventStatus
 from crmevent.services import event as service
 from crmevent.core.security import get_current_user, require_roles
+from crmevent.services.history import record_history, status_label
 
 router = APIRouter(prefix="/events", tags=["events"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("/", response_model=EventRead)
 def create(data: EventCreate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
-    return service.create_event(db, data)
+    event = service.create_event(db, data)
+    record_history(db, current_user, "created", "event", event.id, event.title,
+                   f"Événement « {event.title} » créé en brouillon", company_id=event.company_id,
+                   contact_id=event.contact_id, opportunity_id=event.opportunity_id, event_id=event.id)
+    return event
 
 
 @router.get("/{event_id}", response_model=EventRead)
@@ -43,11 +48,19 @@ def update(event_id: int, data: EventUpdate, db: Session = Depends(get_db), curr
     event = service.get_event(db, event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Not found")
-    return service.update_event(db, event, data)
+    event = service.update_event(db, event, data)
+    record_history(db, current_user, "updated", "event", event.id, event.title,
+                   f"Événement « {event.title} » modifié", company_id=event.company_id,
+                   contact_id=event.contact_id, opportunity_id=event.opportunity_id, event_id=event.id)
+    return event
 
 @router.patch("/{event_id}/status", response_model=EventRead)
 def update_status(event_id: int, status: EventStatus, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
-    return service.update_event_status(db, event_id, status)
+    event = service.update_event_status(db, event_id, status)
+    record_history(db, current_user, "status_changed", "event", event.id, event.title,
+                   f"Statut de l'événement passé à « {status_label(status)} »", company_id=event.company_id,
+                   contact_id=event.contact_id, opportunity_id=event.opportunity_id, event_id=event.id)
+    return event
 
 
 @router.delete("/{event_id}", response_model=dict)
@@ -55,5 +68,10 @@ def delete(event_id: int, db: Session = Depends(get_db), current_user = Depends(
     event = service.get_event(db, event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Not found")
+    context = dict(company_id=event.company_id, contact_id=event.contact_id,
+                   opportunity_id=event.opportunity_id, event_id=event.id)
+    label = event.title
     service.delete_event(db, event)
+    record_history(db, current_user, "deleted", "event", event_id, label,
+                   f"Événement « {label} » supprimé", **context)
     return {"detail": f"Event {event_id} deleted successfully"}

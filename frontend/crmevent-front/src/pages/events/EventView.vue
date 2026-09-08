@@ -63,6 +63,7 @@
         v-if="event"
         :event="event"
       />
+      <HistoryTimeline v-if="event" entity-type="event" :entity-id="event.id" />
     </DetailPage>
   </DashboardLayout>
 </template>
@@ -76,6 +77,7 @@ import DetailPage from "@/components/common/DetailPage.vue"
 import EventDetails from "@/components/event/EventDetails.vue"
 import { eventService } from "@/services/eventService"
 import { useAuthStore } from "@/stores/auth"
+import HistoryTimeline from "@/components/history/HistoryTimeline.vue"
 
 const route = useRoute()
 const router = useRouter()

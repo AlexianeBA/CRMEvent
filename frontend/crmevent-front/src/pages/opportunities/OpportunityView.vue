@@ -7,6 +7,7 @@
         <v-btn v-if="auth.canDeleteCrm && !isFinal" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteOpportunity">Supprimer</v-btn>
       </template>
       <OpportunityDetails v-if="opportunity" :opportunity="opportunity" />
+      <HistoryTimeline v-if="opportunity" entity-type="opportunity" :entity-id="opportunity.id" />
     </DetailPage>
   </DashboardLayout>
 </template>
@@ -19,6 +20,7 @@ import DetailPage from "@/components/common/DetailPage.vue"
 import OpportunityDetails from "@/components/opportunity/OpportunityDetails.vue"
 import opportunityService from "@/services/opportunityService"
 import { useAuthStore } from "@/stores/auth"
+import HistoryTimeline from "@/components/history/HistoryTimeline.vue"
 
 const route = useRoute()
 const router = useRouter()

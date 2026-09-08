@@ -20,6 +20,7 @@
       </template>
 
       <QuoteDetails v-if="quote" :quote="quote" />
+      <HistoryTimeline v-if="quote" entity-type="quote" :entity-id="quote.id" />
     </DetailPage>
   </DashboardLayout>
 </template>
@@ -32,6 +33,7 @@ import DetailPage from "@/components/common/DetailPage.vue"
 import QuoteDetails from "@/components/quotes/QuoteDetails.vue"
 import quoteService from "@/services/quotesService"
 import { useAuthStore } from "@/stores/auth"
+import HistoryTimeline from "@/components/history/HistoryTimeline.vue"
 
 const route = useRoute()
 const router = useRouter()

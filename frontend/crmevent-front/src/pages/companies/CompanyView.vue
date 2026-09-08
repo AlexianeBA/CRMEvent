@@ -13,6 +13,7 @@
         v-if="company"
         :company="company"
       />
+      <HistoryTimeline v-if="company" entity-type="company" :entity-id="company.id" />
     </DetailPage>
   </DashboardLayout>
 </template>
@@ -26,6 +27,7 @@ import DetailPage from "@/components/common/DetailPage.vue"
 import CompanyDetails from "@/components/company/CompanyDetails.vue"
 import { companyService } from "@/services/companyService"
 import { useAuthStore } from "@/stores/auth"
+import HistoryTimeline from "@/components/history/HistoryTimeline.vue"
 
 const route = useRoute()
 const router = useRouter()

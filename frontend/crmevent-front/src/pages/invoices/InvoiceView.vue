@@ -10,6 +10,7 @@
         <v-btn v-if="auth.canManageInvoices && ['draft', 'canceled'].includes(invoice?.status)" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteInvoice">Supprimer</v-btn>
       </template>
       <InvoiceDetails v-if="invoice" :invoice="invoice" />
+      <HistoryTimeline v-if="invoice" entity-type="invoice" :entity-id="invoice.id" />
     </DetailPage>
   </DashboardLayout>
 </template>
@@ -22,6 +23,7 @@ import DetailPage from "@/components/common/DetailPage.vue"
 import InvoiceDetails from "@/components/invoice/InvoiceDetails.vue"
 import invoiceService from "@/services/invoiceService"
 import { useAuthStore } from "@/stores/auth"
+import HistoryTimeline from "@/components/history/HistoryTimeline.vue"
 
 const route = useRoute()
 const router = useRouter()

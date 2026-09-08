@@ -4,12 +4,17 @@ from crmevent.db.base import get_db
 from crmevent.schemas.contact import ContactCreate, ContactRead, ContactUpdate
 from crmevent.services import contact as service
 from crmevent.core.security import get_current_user, require_roles
+from crmevent.services.history import record_history
 
 router = APIRouter(prefix="/contacts", tags=["contacts"], dependencies=[Depends(get_current_user)])
 
 @router.post("/", response_model=ContactRead)
 def create(data: ContactCreate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
-    return service.create_contact(db, data)
+    contact = service.create_contact(db, data)
+    label = f"{contact.first_name} {contact.last_name}"
+    record_history(db, current_user, "created", "contact", contact.id, label,
+                   f"Contact « {label} » créé", company_id=contact.company_id, contact_id=contact.id)
+    return contact
 
 @router.get("/", response_model=list[ContactRead])
 def list_all(
@@ -30,13 +35,23 @@ def get(contact_id: int, db: Session = Depends(get_db)):
 def update(contact_id: int, data: ContactUpdate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     if not service.get_contact(db, contact_id):
         raise HTTPException(status_code=404, detail="Not found")
-    return service.update_contact(db, contact_id, data)
+    contact = service.update_contact(db, contact_id, data)
+    label = f"{contact.first_name} {contact.last_name}"
+    record_history(db, current_user, "updated", "contact", contact.id, label,
+                   f"Contact « {label} » modifié", company_id=contact.company_id, contact_id=contact.id)
+    return contact
 
 @router.delete("/{contact_id}", response_model=dict)
 def delete(contact_id: int, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager"))):
+    contact = service.get_contact(db, contact_id)
+    label = f"{contact.first_name} {contact.last_name}" if contact else f"Contact {contact_id}"
+    company_id = contact.company_id if contact else None
     deleted = service.delete_contact(db, contact_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Not found")
+
+    record_history(db, current_user, "deleted", "contact", contact_id, label,
+                   f"Contact « {label} » supprimé", company_id=company_id, contact_id=contact_id)
 
     return {"detail": (f"Contact {contact_id} "f"deleted successfully"),
     }
