@@ -65,6 +65,19 @@ def reset_user_password(db: Session, user_id: int, password: str):
     db.commit()
     return user
 
+
+def change_own_password(db: Session, user: Users, current_password: str, new_password: str):
+    if not verify_password(current_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Le mot de passe actuel est incorrect")
+    if verify_password(new_password, user.password_hash):
+        raise HTTPException(
+            status_code=400,
+            detail="Le nouveau mot de passe doit être différent du mot de passe actuel",
+        )
+
+    user.password_hash = hash_password(new_password)
+    db.commit()
+
 def authenticate_user(db: Session, email: str, password: str):
     user = db.query(Users).filter(Users.email == email).first()
     if not user:

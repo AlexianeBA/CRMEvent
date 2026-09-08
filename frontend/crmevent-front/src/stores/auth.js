@@ -49,6 +49,13 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
+    async changePassword(currentPassword, newPassword) {
+      await api.post("/auth/me/change-password", {
+        current_password: currentPassword,
+        new_password: newPassword,
+      })
+    },
+
     logout(redirect = true) {
       localStorage.removeItem("token")
       this.user = null

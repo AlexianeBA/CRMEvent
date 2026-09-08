@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 
 from crmevent.db.base import get_db
-from crmevent.schemas.users import UsersCreate, UsersRead, UserAdminCreate, UserAdminUpdate, UserPasswordReset
+from crmevent.schemas.users import OwnPasswordChange, UsersCreate, UsersRead, UserAdminCreate, UserAdminUpdate, UserPasswordReset
 from crmevent.services import users as service
 from crmevent.core.security import create_access_token, get_current_user, require_roles
 from crmevent.models.users import Users
@@ -47,6 +47,11 @@ def list_users(db: Session = Depends(get_db), current_user=Depends(require_roles
 @router.get("/me", response_model=UsersRead)
 def me(current_user = Depends(get_current_user)):
     return current_user
+
+
+@router.post("/me/change-password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(data: OwnPasswordChange, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    service.change_own_password(db, current_user, data.current_password, data.new_password)
 
 
 @router.post("/users", response_model=UsersRead, status_code=status.HTTP_201_CREATED)
