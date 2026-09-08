@@ -7,7 +7,17 @@
         <v-btn v-if="auth.canDeleteCrm && !isFinal" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteOpportunity">Supprimer</v-btn>
       </template>
       <OpportunityDetails v-if="opportunity" :opportunity="opportunity" />
-      <HistoryTimeline v-if="opportunity" entity-type="opportunity" :entity-id="opportunity.id" />
+      <OpportunityActivities
+        v-if="opportunity"
+        :opportunity-id="opportunity.id"
+        @changed="historyVersion += 1"
+      />
+      <HistoryTimeline
+        v-if="opportunity"
+        :key="historyVersion"
+        entity-type="opportunity"
+        :entity-id="opportunity.id"
+      />
     </DetailPage>
   </DashboardLayout>
 </template>
@@ -21,6 +31,7 @@ import OpportunityDetails from "@/components/opportunity/OpportunityDetails.vue"
 import opportunityService from "@/services/opportunityService"
 import { useAuthStore } from "@/stores/auth"
 import HistoryTimeline from "@/components/history/HistoryTimeline.vue"
+import OpportunityActivities from "@/components/opportunity/OpportunityActivities.vue"
 
 const route = useRoute()
 const router = useRouter()
@@ -29,6 +40,7 @@ const opportunity = ref(null)
 const loading = ref(false)
 const actionLoading = ref(false)
 const error = ref("")
+const historyVersion = ref(0)
 const isFinal = computed(() => ["closed_won", "closed_lost"].includes(opportunity.value?.status))
 const transitionMap = {
   new: [{ status: "qualification", label: "Qualifier", color: "primary", icon: "mdi-arrow-right", variant: "flat" }],
@@ -60,6 +72,7 @@ function runTransition(transition) {
       route.params.id,
       transition.status,
     )
+    historyVersion.value += 1
 
     if (transition.createEvent) {
       await createEvent()

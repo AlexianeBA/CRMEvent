@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
@@ -47,13 +49,21 @@ def patch(activity_id: int, data: ActivityUpdate, db: Session = Depends(get_db),
     return activity
 
 @router.patch("/{activity_id}/status", response_model=ActivityRead)
-def update_status(activity_id: int, status: ActivityStatus, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
-    activity = service.update_activity_status(db, activity_id, status)
+def update_status(
+    activity_id: int,
+    status: ActivityStatus,
+    scheduled_at: datetime | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_roles("admin", "manager", "commercial")),
+):
+    activity = service.update_activity_status(db, activity_id, status, scheduled_at)
     if not activity:
         raise HTTPException(status_code=404, detail="Not found")
     opportunity = get_opportunity(db, activity.opportunity_id)
     record_history(db, current_user, "status_changed", "opportunity", opportunity.id, opportunity.title,
-                   f"Activité passée à « {status_label(status)} »", company_id=opportunity.company_id,
+                   f"Activité passée à « {status_label(status)} »"
+                   + (f" pour le {activity.scheduled_at}" if status == ActivityStatus.planned else ""),
+                   company_id=opportunity.company_id,
                    contact_id=opportunity.contact_id, opportunity_id=opportunity.id)
     return activity
 

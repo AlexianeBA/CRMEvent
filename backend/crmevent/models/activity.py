@@ -12,5 +12,6 @@ class Activity(Base):
     status = Column(Enum("draft", "planned", "done", "canceled", name="activity_status"), nullable=False, default="draft")
     created_at = Column(String, nullable=False)
     updated_at = Column(String, nullable=False)
+    scheduled_at = Column(String, nullable=True)
 
     opportunity = relationship("Opportunity", back_populates="activities")

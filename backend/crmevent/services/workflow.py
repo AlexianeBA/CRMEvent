@@ -28,7 +28,7 @@ INVOICE_TRANSITIONS = {
 }
 
 ACTIVITY_TRANSITIONS = {
-    "draft": {"planned", "canceled"},
+    "draft": {"planned", "done", "canceled"},
     "planned": {"done", "canceled"},
     "done": set(),
     "canceled": set(),
