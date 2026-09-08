@@ -3,6 +3,8 @@ import Home from "../pages/Home.vue"
 import Login from "../pages/Login.vue"
 import Register from "../pages/Register.vue"
 import Dashboard from "../pages/Dashboard.vue"
+import { useAuthStore } from "@/stores/auth"
+import { pinia } from "@/stores/pinia"
 
 const routes = [
   {
@@ -159,11 +161,54 @@ const routes = [
     component: () =>
       import("@/pages/invoices/InvoiceView.vue"),
   },
+  {
+    path: "/admin/users",
+    name: "AdminUsers",
+    component: () => import("@/pages/admin/AdminUsers.vue"),
+    meta: { roles: ["admin"] },
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+const publicPaths = new Set(["/", "/login", "/register"])
+const crmWriteRoutes = new Set([
+  "CompanyCreate", "CompanyEdit", "ContactCreate", "ContactEdit",
+  "OpportunityCreate", "OpportunityEdit", "EventCreate", "EventEdit",
+  "QuoteCreate", "QuoteEdit",
+])
+
+router.beforeEach(async (to) => {
+  if (publicPaths.has(to.path)) return true
+
+  const auth = useAuthStore(pinia)
+  if (!auth.initialized) {
+    try {
+      await auth.fetchMe()
+    } catch {
+      return { path: "/login", query: { redirect: to.fullPath } }
+    }
+  }
+
+  if (!auth.isAuthenticated) {
+    return { path: "/login", query: { redirect: to.fullPath } }
+  }
+
+  const roles = to.meta.roles
+  if (roles && !roles.includes(auth.user.role)) {
+    return { path: "/dashboard" }
+  }
+  if (crmWriteRoutes.has(to.name) && !auth.canManageCrm) {
+    return { path: "/dashboard" }
+  }
+  if (to.name === "InvoiceEdit" && !auth.canManageInvoices) {
+    return { path: "/dashboard" }
+  }
+
+  return true
 })
 
 export default router

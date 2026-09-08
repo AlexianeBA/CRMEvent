@@ -6,8 +6,8 @@
     <template #actions="{ item }">
       <div class="action-buttons">
         <v-btn icon="mdi-eye-outline" variant="text" size="small" title="Voir la facture" @click.stop="viewInvoice(item)" />
-        <v-btn icon="mdi-pencil-outline" variant="text" size="small" title="Modifier la facture" :disabled="!canEdit(item)" @click.stop="editInvoice(item)" />
-        <v-btn icon="mdi-delete-outline" variant="text" size="small" color="error" title="Supprimer la facture" :disabled="!canDelete(item)" @click.stop="deleteInvoice(item)" />
+        <v-btn v-if="auth.canManageInvoices" icon="mdi-pencil-outline" variant="text" size="small" title="Modifier la facture" :disabled="!canEdit(item)" @click.stop="editInvoice(item)" />
+        <v-btn v-if="auth.canManageInvoices" icon="mdi-delete-outline" variant="text" size="small" color="error" title="Supprimer la facture" :disabled="!canDelete(item)" @click.stop="deleteInvoice(item)" />
       </div>
     </template>
   </DataTable>
@@ -18,9 +18,11 @@ import { onMounted } from "vue"
 import { useRouter } from "vue-router"
 import DataTable from "@/components/common/DataTable.vue"
 import { useInvoiceStore } from "@/stores/invoice"
+import { useAuthStore } from "@/stores/auth"
 
 const router = useRouter()
 const store = useInvoiceStore()
+const auth = useAuthStore()
 
 const labels = { draft: "Brouillon", sent: "Envoyée", paid: "Payée", overdue: "En retard", canceled: "Annulée", locked: "Verrouillée" }
 const colors = { draft: "grey", sent: "blue", paid: "green", overdue: "orange", canceled: "red", locked: "purple" }

@@ -16,6 +16,7 @@
         />
 
         <v-btn
+          v-if="auth.canManageCrm"
           icon="mdi-pencil-outline"
           variant="text"
           size="small"
@@ -24,6 +25,7 @@
         />
 
         <v-btn
+          v-if="auth.canDeleteCrm"
           icon="mdi-delete-outline"
           variant="text"
           size="small"
@@ -42,9 +44,11 @@ import { useRouter } from "vue-router"
 
 import { useCompanyStore } from "@/stores/company"
 import DataTable from "@/components/common/DataTable.vue"
+import { useAuthStore } from "@/stores/auth"
 
 const router = useRouter()
 const store = useCompanyStore()
+const auth = useAuthStore()
 
 const columns = [
   {

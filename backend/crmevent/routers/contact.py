@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.contact import ContactCreate, ContactRead, ContactUpdate
 from crmevent.services import contact as service
-from crmevent.core.security import get_current_user
+from crmevent.core.security import get_current_user, require_roles
 
-router = APIRouter(prefix="/contacts", tags=["contacts"])
+router = APIRouter(prefix="/contacts", tags=["contacts"], dependencies=[Depends(get_current_user)])
 
 @router.post("/", response_model=ContactRead)
-def create(data: ContactCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def create(data: ContactCreate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     return service.create_contact(db, data)
 
 @router.get("/", response_model=list[ContactRead])
@@ -27,13 +27,13 @@ def get(contact_id: int, db: Session = Depends(get_db)):
     return contact
 
 @router.patch("/{contact_id}", response_model=ContactRead)
-def update(contact_id: int, data: ContactUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def update(contact_id: int, data: ContactUpdate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     if not service.get_contact(db, contact_id):
         raise HTTPException(status_code=404, detail="Not found")
     return service.update_contact(db, contact_id, data)
 
 @router.delete("/{contact_id}", response_model=dict)
-def delete(contact_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def delete(contact_id: int, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager"))):
     deleted = service.delete_contact(db, contact_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Not found")

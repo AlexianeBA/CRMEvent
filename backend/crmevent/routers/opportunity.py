@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.opportunity import OpportunityCreate, OpportunityRead, OpportunityStatus, OpportunityUpdate
 from crmevent.services import opportunity as service
-from crmevent.core.security import get_current_user
+from crmevent.core.security import get_current_user, require_roles
 
-router = APIRouter(prefix="/opportunities", tags=["opportunities"])
+router = APIRouter(prefix="/opportunities", tags=["opportunities"], dependencies=[Depends(get_current_user)])
 
 @router.post("/", response_model=OpportunityRead)
-def create(data: OpportunityCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def create(data: OpportunityCreate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     return service.create_opportunity(db, data)
 
 @router.get("/", response_model=list[OpportunityRead])
@@ -43,15 +43,15 @@ def get(opportunity_id: int, db: Session = Depends(get_db)):
     return opportunity
 
 @router.patch("/{opportunity_id}", response_model=OpportunityRead)
-def patch(opportunity_id: int, data: OpportunityUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user),):
+def patch(opportunity_id: int, data: OpportunityUpdate, db: Session = Depends(get_db), current_user=Depends(require_roles("admin", "manager", "commercial")),):
     return service.update_opportunity(db, opportunity_id, data)
 
 
 @router.patch("/{opportunity_id}/status", response_model=OpportunityRead)
-def update_status(opportunity_id: int, status: OpportunityStatus, db: Session = Depends(get_db), current_user=Depends(get_current_user),):
+def update_status(opportunity_id: int, status: OpportunityStatus, db: Session = Depends(get_db), current_user=Depends(require_roles("admin", "manager", "commercial")),):
     return service.update_opportunity_status(db, opportunity_id, status)
 
 
 @router.delete("/{opportunity_id}")
-def delete(opportunity_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def delete(opportunity_id: int, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager"))):
     return service.delete_opportunity(db, opportunity_id)

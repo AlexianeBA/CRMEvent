@@ -4,12 +4,12 @@ from crmevent.db.base import get_db
 from crmevent.models.invoice import Invoice
 from crmevent.schemas.invoice import InvoiceRead, InvoiceStatus, InvoiceUpdate
 from crmevent.services import invoice as service
-from crmevent.core.security import get_current_user
+from crmevent.core.security import get_current_user, require_roles
 
-router = APIRouter(prefix="/invoices", tags=["invoices"])
+router = APIRouter(prefix="/invoices", tags=["invoices"], dependencies=[Depends(get_current_user)])
 
 @router.post("/", response_model=InvoiceRead)
-def create_from_quote(quote_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def create_from_quote(quote_id: int, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "comptable"))):
     return service.create_invoice_from_quote(db, quote_id)
 
 @router.get("/", response_model=list[InvoiceRead])
@@ -42,7 +42,7 @@ def update_invoice(
     invoice_id: int,
     data: InvoiceUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles("admin", "manager", "comptable")),
 ):
     invoice = service.get_invoice(db, invoice_id)
     if not invoice:
@@ -55,12 +55,12 @@ def patch_status(
     invoice_id: int,
     status: InvoiceStatus,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles("admin", "manager", "comptable")),
 ):
     return service.update_invoice_status(db, invoice_id, status)
 
 @router.delete("/{invoice_id}", response_model=dict)
-def delete_invoice(invoice_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def delete_invoice(invoice_id: int, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "comptable"))):
     invoice = service.get_invoice(db, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Not found")

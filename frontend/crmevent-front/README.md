@@ -42,3 +42,10 @@ npm run build
 ```sh
 npm run lint
 ```
+
+
+Rôles :
+- admin : accès complet et gestion des utilisateurs ;
+- manager : gestion CRM, suppressions et facturation ;
+- commercial : création, modification et workflow CRM, sans suppression ;
+- comptable : consultation du CRM et gestion des factures.

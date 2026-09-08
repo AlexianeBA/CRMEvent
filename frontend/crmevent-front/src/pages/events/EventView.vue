@@ -12,7 +12,7 @@
     >
       <template #actions>
         <v-btn
-          v-for="transition in transitions"
+          v-for="transition in auth.canManageCrm ? transitions : []"
           :key="transition.status"
           :color="transition.color"
           :variant="transition.variant"
@@ -75,9 +75,11 @@ import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import DetailPage from "@/components/common/DetailPage.vue"
 import EventDetails from "@/components/event/EventDetails.vue"
 import { eventService } from "@/services/eventService"
+import { useAuthStore } from "@/stores/auth"
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 const event = ref(null)
 const loading = ref(false)
@@ -118,8 +120,8 @@ const workflowSteps = [
 
 const workflowOrder = workflowSteps.map((step) => step.status)
 const transitions = computed(() => transitionMap[event.value?.status] ?? [])
-const canEdit = computed(() => ["draft", "scheduled"].includes(event.value?.status))
-const canDelete = computed(() => ["draft", "canceled"].includes(event.value?.status))
+const canEdit = computed(() => auth.canManageCrm && ["draft", "scheduled"].includes(event.value?.status))
+const canDelete = computed(() => auth.canDeleteCrm && ["draft", "canceled"].includes(event.value?.status))
 const completedStatuses = computed(() => {
   const currentIndex = workflowOrder.indexOf(event.value?.status)
   return currentIndex < 0 ? [] : workflowOrder.slice(0, currentIndex)

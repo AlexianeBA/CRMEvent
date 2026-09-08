@@ -38,25 +38,23 @@
 
 <script setup>
 import { ref } from "vue";
-import api from "../api/api";
 import { useRouter } from "vue-router";
+import { useRoute } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+
+defineOptions({ name: "LoginPage" });
 
 const router = useRouter();
+const route = useRoute();
+const auth = useAuthStore();
 
 const email = ref("");
 const password = ref("");
 
 const login = async () => {
   try {
-    const formData = new URLSearchParams();
-    formData.append("username", email.value);
-    formData.append("password", password.value);
-
-    const res = await api.post("/auth/login", formData);
-
-    localStorage.setItem("token", res.data.access_token);
-
-    router.push("/dashboard");
+    await auth.login(email.value, password.value);
+    router.push(String(route.query.redirect || "/dashboard"));
   } catch (err) {
   const msg = err?.response?.data?.detail || "Erreur de connexion";
   alert(Array.isArray(msg) ? JSON.stringify(msg) : msg);

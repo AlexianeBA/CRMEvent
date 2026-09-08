@@ -48,3 +48,15 @@ def get_current_user(
         raise HTTPException(status_code=403, detail="Inactive user")
 
     return user
+
+
+def require_roles(*allowed_roles: str):
+    def dependency(current_user: Users = Depends(get_current_user)):
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=403,
+                detail="Vous n'avez pas les droits nécessaires pour cette action",
+            )
+        return current_user
+
+    return dependency

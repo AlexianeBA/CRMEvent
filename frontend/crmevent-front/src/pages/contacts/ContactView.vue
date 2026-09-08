@@ -1,10 +1,11 @@
 <template>
   <DashboardLayout>
     <DetailPage
-      :title="contact?.firstName || 'Détail du contact'"
+      :title="contact ? `${contact.first_name} ${contact.last_name}` : 'Détail du contact'"
       breadcrumb="Contacts / Détail"
       :loading="loading"
       :error="error"
+      :show-edit="auth.canManageCrm"
       @back="goToList"
       @edit="goToEdit"
     >
@@ -24,9 +25,11 @@ import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import DetailPage from "@/components/common/DetailPage.vue"
 import ContactDetails from "@/components/contact/ContactDetails.vue"
 import { contactService } from "@/services/contactService"
+import { useAuthStore } from "@/stores/auth"
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 const contact = ref(null)
 const loading = ref(false)

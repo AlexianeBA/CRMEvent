@@ -11,12 +11,12 @@
       @edit="goToEdit"
     >
       <template #actions>
-        <v-btn v-if="quote?.status === 'draft'" color="primary" prepend-icon="mdi-send-outline" :loading="actionLoading" @click="changeStatus('sent')">Envoyer</v-btn>
-        <v-btn v-if="quote?.status === 'sent'" color="success" prepend-icon="mdi-check-circle-outline" :loading="actionLoading" @click="acceptQuote">Accepter</v-btn>
-        <v-btn v-if="quote?.status === 'sent'" color="error" variant="tonal" prepend-icon="mdi-close-circle-outline" :loading="actionLoading" @click="changeStatus('rejected')">Refuser</v-btn>
-        <v-btn v-if="quote?.status === 'sent'" color="warning" variant="tonal" prepend-icon="mdi-clock-alert-outline" :loading="actionLoading" @click="changeStatus('expired')">Expirer</v-btn>
-        <v-btn v-if="canLock" variant="tonal" prepend-icon="mdi-lock-outline" :loading="actionLoading" @click="changeStatus('locked')">Verrouiller</v-btn>
-        <v-btn v-if="quote?.status === 'draft'" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteQuote">Supprimer</v-btn>
+        <v-btn v-if="auth.canManageCrm && quote?.status === 'draft'" color="primary" prepend-icon="mdi-send-outline" :loading="actionLoading" @click="changeStatus('sent')">Envoyer</v-btn>
+        <v-btn v-if="auth.canManageCrm && quote?.status === 'sent'" color="success" prepend-icon="mdi-check-circle-outline" :loading="actionLoading" @click="acceptQuote">Accepter</v-btn>
+        <v-btn v-if="auth.canManageCrm && quote?.status === 'sent'" color="error" variant="tonal" prepend-icon="mdi-close-circle-outline" :loading="actionLoading" @click="changeStatus('rejected')">Refuser</v-btn>
+        <v-btn v-if="auth.canManageCrm && quote?.status === 'sent'" color="warning" variant="tonal" prepend-icon="mdi-clock-alert-outline" :loading="actionLoading" @click="changeStatus('expired')">Expirer</v-btn>
+        <v-btn v-if="auth.canManageCrm && canLock" variant="tonal" prepend-icon="mdi-lock-outline" :loading="actionLoading" @click="changeStatus('locked')">Verrouiller</v-btn>
+        <v-btn v-if="auth.canDeleteCrm && quote?.status === 'draft'" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteQuote">Supprimer</v-btn>
       </template>
 
       <QuoteDetails v-if="quote" :quote="quote" />
@@ -31,15 +31,17 @@ import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import DetailPage from "@/components/common/DetailPage.vue"
 import QuoteDetails from "@/components/quotes/QuoteDetails.vue"
 import quoteService from "@/services/quotesService"
+import { useAuthStore } from "@/stores/auth"
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 const quote = ref(null)
 const loading = ref(false)
 const actionLoading = ref(false)
 const error = ref("")
 
-const canEdit = computed(() => ["draft", "sent"].includes(quote.value?.status))
+const canEdit = computed(() => auth.canManageCrm && ["draft", "sent"].includes(quote.value?.status))
 const canLock = computed(() => ["accepted", "rejected", "expired"].includes(quote.value?.status))
 
 async function loadQuote() {

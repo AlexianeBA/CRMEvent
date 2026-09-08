@@ -2,12 +2,12 @@
   <DashboardLayout>
     <DetailPage :title="invoice?.number || 'Facture'" :subtitle="invoice?.title" breadcrumb="Factures / Détail" :loading="loading" :error="error" :show-edit="canEdit" @back="goToList" @edit="goToEdit">
       <template #actions>
-        <v-btn v-if="invoice?.status === 'draft'" color="primary" prepend-icon="mdi-send-outline" :loading="actionLoading" @click="changeStatus('sent')">Envoyer</v-btn>
-        <v-btn v-if="['sent', 'overdue'].includes(invoice?.status)" color="success" prepend-icon="mdi-cash-check" :loading="actionLoading" @click="changeStatus('paid')">Marquer payée</v-btn>
-        <v-btn v-if="invoice?.status === 'sent'" color="warning" variant="tonal" prepend-icon="mdi-clock-alert-outline" :loading="actionLoading" @click="changeStatus('overdue')">En retard</v-btn>
-        <v-btn v-if="['draft', 'sent', 'overdue'].includes(invoice?.status)" color="error" variant="tonal" prepend-icon="mdi-cancel" :loading="actionLoading" @click="changeStatus('canceled')">Annuler</v-btn>
-        <v-btn v-if="['paid', 'canceled'].includes(invoice?.status)" variant="tonal" prepend-icon="mdi-lock-outline" :loading="actionLoading" @click="changeStatus('locked')">Verrouiller</v-btn>
-        <v-btn v-if="['draft', 'canceled'].includes(invoice?.status)" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteInvoice">Supprimer</v-btn>
+        <v-btn v-if="auth.canManageInvoices && invoice?.status === 'draft'" color="primary" prepend-icon="mdi-send-outline" :loading="actionLoading" @click="changeStatus('sent')">Envoyer</v-btn>
+        <v-btn v-if="auth.canManageInvoices && ['sent', 'overdue'].includes(invoice?.status)" color="success" prepend-icon="mdi-cash-check" :loading="actionLoading" @click="changeStatus('paid')">Marquer payée</v-btn>
+        <v-btn v-if="auth.canManageInvoices && invoice?.status === 'sent'" color="warning" variant="tonal" prepend-icon="mdi-clock-alert-outline" :loading="actionLoading" @click="changeStatus('overdue')">En retard</v-btn>
+        <v-btn v-if="auth.canManageInvoices && ['draft', 'sent', 'overdue'].includes(invoice?.status)" color="error" variant="tonal" prepend-icon="mdi-cancel" :loading="actionLoading" @click="changeStatus('canceled')">Annuler</v-btn>
+        <v-btn v-if="auth.canManageInvoices && ['paid', 'canceled'].includes(invoice?.status)" variant="tonal" prepend-icon="mdi-lock-outline" :loading="actionLoading" @click="changeStatus('locked')">Verrouiller</v-btn>
+        <v-btn v-if="auth.canManageInvoices && ['draft', 'canceled'].includes(invoice?.status)" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteInvoice">Supprimer</v-btn>
       </template>
       <InvoiceDetails v-if="invoice" :invoice="invoice" />
     </DetailPage>
@@ -21,14 +21,16 @@ import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import DetailPage from "@/components/common/DetailPage.vue"
 import InvoiceDetails from "@/components/invoice/InvoiceDetails.vue"
 import invoiceService from "@/services/invoiceService"
+import { useAuthStore } from "@/stores/auth"
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 const invoice = ref(null)
 const loading = ref(false)
 const actionLoading = ref(false)
 const error = ref("")
-const canEdit = computed(() => invoice.value?.status === "draft")
+const canEdit = computed(() => auth.canManageInvoices && invoice.value?.status === "draft")
 
 async function loadInvoice() {
   loading.value = true

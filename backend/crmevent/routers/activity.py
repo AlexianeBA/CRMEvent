@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.activity import ActivityCreate, ActivityRead, ActivityUpdate, ActivityStatus
 from crmevent.services import activity as service
-from crmevent.core.security import get_current_user
+from crmevent.core.security import get_current_user, require_roles
 
 
-router = APIRouter(prefix="/activities", tags=["activities"])
+router = APIRouter(prefix="/activities", tags=["activities"], dependencies=[Depends(get_current_user)])
 
 @router.post("/", response_model=ActivityRead)
-def create(data: ActivityCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def create(data: ActivityCreate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     return service.create_activity(db, data)
 
 @router.get("/", response_model=list[ActivityRead])
@@ -28,21 +28,21 @@ def get(activity_id: int, db: Session = Depends(get_db)):
     return activity
 
 @router.patch("/{activity_id}", response_model=ActivityRead)
-def patch(activity_id: int, data: ActivityUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def patch(activity_id: int, data: ActivityUpdate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     activity = service.update_activity(db, activity_id, data)
     if not activity:
         raise HTTPException(status_code=404, detail="Not found")
     return activity
 
 @router.patch("/{activity_id}/status", response_model=ActivityRead)
-def update_status(activity_id: int, status: ActivityStatus, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def update_status(activity_id: int, status: ActivityStatus, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     activity = service.update_activity_status(db, activity_id, status)
     if not activity:
         raise HTTPException(status_code=404, detail="Not found")
     return activity
 
 @router.delete("/{activity_id}", response_model=dict)
-def delete(activity_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def delete(activity_id: int, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager"))):
     activity = service.get_activity(db, activity_id)
     if not activity:
         raise HTTPException(status_code=404, detail="Not found")

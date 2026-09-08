@@ -9,6 +9,7 @@ class Users(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     is_active = Column(Integer, default=1)
+    role = Column(String, nullable=False, default="commercial")
     
     
     opportunities = relationship(

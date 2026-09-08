@@ -10,6 +10,7 @@
       </div>
 
       <v-btn
+        v-if="auth.canManageCrm"
         color="primary"
         prepend-icon="mdi-plus"
         @click="goToCreate"
@@ -24,11 +25,13 @@
 
 <script setup>
 import { useRouter } from "vue-router"
+import { useAuthStore } from "@/stores/auth"
 
 import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import CompanyTable from "@/components/company/CompanyTable.vue"
 
 const router = useRouter()
+const auth = useAuthStore()
 
 function goToCreate() {
   router.push({

@@ -4,8 +4,8 @@
     <template #actions="{ item }">
       <div class="action-buttons">
         <v-btn icon="mdi-eye-outline" variant="text" size="small" title="Voir l'opportunité" @click.stop="viewOpportunity(item)" />
-        <v-btn icon="mdi-pencil-outline" variant="text" size="small" title="Modifier l'opportunité" :disabled="isFinal(item)" @click.stop="editOpportunity(item)" />
-        <v-btn icon="mdi-delete-outline" variant="text" size="small" color="error" title="Supprimer l'opportunité" :disabled="isFinal(item)" @click.stop="deleteOpportunity(item)" />
+        <v-btn v-if="auth.canManageCrm" icon="mdi-pencil-outline" variant="text" size="small" title="Modifier l'opportunité" :disabled="isFinal(item)" @click.stop="editOpportunity(item)" />
+        <v-btn v-if="auth.canDeleteCrm" icon="mdi-delete-outline" variant="text" size="small" color="error" title="Supprimer l'opportunité" :disabled="isFinal(item)" @click.stop="deleteOpportunity(item)" />
       </div>
     </template>
   </DataTable>
@@ -16,9 +16,11 @@ import { onMounted } from "vue"
 import { useRouter } from "vue-router"
 import DataTable from "@/components/common/DataTable.vue"
 import { useOpportunityStore } from "@/stores/opportunity"
+import { useAuthStore } from "@/stores/auth"
 
 const router = useRouter()
 const store = useOpportunityStore()
+const auth = useAuthStore()
 const labels = { new: "Nouvelle", qualification: "Qualification", proposal: "Proposition", negotiation: "Négociation", closed_won: "Gagnée", closed_lost: "Perdue" }
 const colors = { new: "blue-grey", qualification: "blue", proposal: "cyan", negotiation: "orange", closed_won: "green", closed_lost: "red" }
 const columns = [

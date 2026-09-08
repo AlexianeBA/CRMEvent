@@ -4,17 +4,17 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.quote import QuoteCreate, QuoteRead, QuoteStatus, QuoteUpdate
 from crmevent.services import quote as service
-from crmevent.core.security import get_current_user
+from crmevent.core.security import get_current_user, require_roles
 
-router = APIRouter(prefix="/quotes", tags=["quotes"])
+router = APIRouter(prefix="/quotes", tags=["quotes"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("/", response_model=QuoteRead)
-def create(data: QuoteCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def create(data: QuoteCreate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     return service.create_quote(db, data)
 
 @router.post("/{quote_id}/accept")
-def accept_quote(quote_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),):
+def accept_quote(quote_id: int, db: Session = Depends(get_db), current_user=Depends(require_roles("admin", "manager", "commercial")),):
     quote, invoice = service.accept_quote(db, quote_id)
     return {"quote": quote, "invoice": invoice}
 
@@ -45,18 +45,18 @@ def list_all(
     )
 
 @router.patch("/{quote_id}", response_model=QuoteRead)
-def update(quote_id: int, data: QuoteUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def update(quote_id: int, data: QuoteUpdate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     quote = service.get_quote(db, quote_id)
     if not quote:
         raise HTTPException(status_code=404, detail="Not found")
     return service.update_quote(db, quote, data)
 
 @router.patch("/{quote_id}/status", response_model=QuoteRead)
-def update_status(quote_id: int, status: QuoteStatus, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def update_status(quote_id: int, status: QuoteStatus, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     return service.update_quote_status(db, quote_id, status)
 
 @router.delete("/{quote_id}", response_model=dict)
-def delete(quote_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def delete(quote_id: int, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager"))):
     quote = service.get_quote(db, quote_id)
     if not quote:
         raise HTTPException(status_code=404, detail="Not found")

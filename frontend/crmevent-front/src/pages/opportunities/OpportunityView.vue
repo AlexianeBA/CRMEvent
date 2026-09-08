@@ -1,10 +1,10 @@
 <template>
   <DashboardLayout>
-    <DetailPage :title="opportunity?.title || 'Opportunité'" breadcrumb="Opportunités / Détail" :loading="loading" :error="error" :show-edit="!isFinal" @back="goToList" @edit="goToEdit">
+    <DetailPage :title="opportunity?.title || 'Opportunité'" breadcrumb="Opportunités / Détail" :loading="loading" :error="error" :show-edit="auth.canManageCrm && !isFinal" @back="goToList" @edit="goToEdit">
       <template #actions>
-        <v-btn v-for="transition in transitions" :key="transition.status" :color="transition.color" :variant="transition.variant" :prepend-icon="transition.icon" :loading="actionLoading" @click="runTransition(transition)">{{ transition.label }}</v-btn>
-        <v-btn v-if="opportunity?.status === 'closed_won'" color="primary" prepend-icon="mdi-calendar-plus" @click="createEvent">Créer l'événement</v-btn>
-        <v-btn v-if="!isFinal" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteOpportunity">Supprimer</v-btn>
+        <v-btn v-for="transition in auth.canManageCrm ? transitions : []" :key="transition.status" :color="transition.color" :variant="transition.variant" :prepend-icon="transition.icon" :loading="actionLoading" @click="runTransition(transition)">{{ transition.label }}</v-btn>
+        <v-btn v-if="auth.canManageCrm && opportunity?.status === 'closed_won'" color="primary" prepend-icon="mdi-calendar-plus" @click="createEvent">Créer l'événement</v-btn>
+        <v-btn v-if="auth.canDeleteCrm && !isFinal" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteOpportunity">Supprimer</v-btn>
       </template>
       <OpportunityDetails v-if="opportunity" :opportunity="opportunity" />
     </DetailPage>
@@ -18,9 +18,11 @@ import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import DetailPage from "@/components/common/DetailPage.vue"
 import OpportunityDetails from "@/components/opportunity/OpportunityDetails.vue"
 import opportunityService from "@/services/opportunityService"
+import { useAuthStore } from "@/stores/auth"
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 const opportunity = ref(null)
 const loading = ref(false)
 const actionLoading = ref(false)

@@ -15,7 +15,7 @@
         />
 
         <v-btn
-          v-if="['draft', 'scheduled'].includes(item.status)"
+          v-if="auth.canManageCrm && ['draft', 'scheduled'].includes(item.status)"
           icon="mdi-pencil-outline"
           variant="text"
           size="small"
@@ -23,7 +23,7 @@
         />
 
         <v-btn
-          v-if="['draft', 'canceled'].includes(item.status)"
+          v-if="auth.canDeleteCrm && ['draft', 'canceled'].includes(item.status)"
           icon="mdi-delete-outline"
           variant="text"
           size="small"
@@ -40,9 +40,11 @@ import { onMounted } from "vue"
 import { useRouter } from "vue-router"
 import { useEventStore } from "@/stores/event"
 import DataTable from "@/components/common/DataTable.vue"
+import { useAuthStore } from "@/stores/auth"
 
 const router = useRouter()
 const store = useEventStore()
+const auth = useAuthStore()
 
 const typeLabels = {
   webinar: "Webinaire",

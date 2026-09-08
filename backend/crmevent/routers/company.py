@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.schemas.company import CompanyCreate, CompanyRead, CompanyUpdate
 from crmevent.services import company as service
-from crmevent.core.security import get_current_user
+from crmevent.core.security import get_current_user, require_roles
 
 
-router = APIRouter(prefix="/companies", tags=["companies"])
+router = APIRouter(prefix="/companies", tags=["companies"], dependencies=[Depends(get_current_user)])
 
 @router.post("/", response_model=CompanyRead)
-def create(data: CompanyCreate, db: Session = Depends(get_db),current_user = Depends(get_current_user)):
+def create(data: CompanyCreate, db: Session = Depends(get_db),current_user = Depends(require_roles("admin", "manager", "commercial"))):
     return service.create_company(db, data)
 
 @router.get("/", response_model=list[CompanyRead])
@@ -29,14 +29,14 @@ def get(company_id: int, db: Session = Depends(get_db)):
     return company
 
 @router.patch("/{company_id}", response_model=CompanyRead)
-def update(company_id: int, data: CompanyUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def update(company_id: int, data: CompanyUpdate, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "commercial"))):
     company = service.update_company(db, company_id, data)
     if not company:
         raise HTTPException(status_code=404, detail="Not found")
     return company
 
 @router.delete("/{company_id}", status_code=204)
-def delete(company_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def delete(company_id: int, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager"))):
     deleted = service.delete_company(db, company_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Not found")

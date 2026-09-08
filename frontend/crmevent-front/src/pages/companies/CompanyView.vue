@@ -5,6 +5,7 @@
       breadcrumb="Entreprises / Détail"
       :loading="loading"
       :error="error"
+      :show-edit="auth.canManageCrm"
       @back="goToList"
       @edit="goToEdit"
     >
@@ -24,9 +25,11 @@ import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import DetailPage from "@/components/common/DetailPage.vue"
 import CompanyDetails from "@/components/company/CompanyDetails.vue"
 import { companyService } from "@/services/companyService"
+import { useAuthStore } from "@/stores/auth"
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 const company = ref(null)
 const loading = ref(false)
