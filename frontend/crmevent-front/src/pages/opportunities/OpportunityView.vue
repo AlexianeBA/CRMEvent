@@ -2,7 +2,8 @@
   <DashboardLayout>
     <DetailPage :title="opportunity?.title || 'Opportunité'" breadcrumb="Opportunités / Détail" :loading="loading" :error="error" :show-edit="!isFinal" @back="goToList" @edit="goToEdit">
       <template #actions>
-        <v-btn v-for="transition in transitions" :key="transition.status" :color="transition.color" :variant="transition.variant" :prepend-icon="transition.icon" :loading="actionLoading" @click="changeStatus(transition.status)">{{ transition.label }}</v-btn>
+        <v-btn v-for="transition in transitions" :key="transition.status" :color="transition.color" :variant="transition.variant" :prepend-icon="transition.icon" :loading="actionLoading" @click="runTransition(transition)">{{ transition.label }}</v-btn>
+        <v-btn v-if="opportunity?.status === 'closed_won'" color="primary" prepend-icon="mdi-calendar-plus" @click="createEvent">Créer l'événement</v-btn>
         <v-btn v-if="!isFinal" color="error" variant="tonal" prepend-icon="mdi-delete-outline" :loading="actionLoading" @click="deleteOpportunity">Supprimer</v-btn>
       </template>
       <OpportunityDetails v-if="opportunity" :opportunity="opportunity" />
@@ -29,7 +30,7 @@ const transitionMap = {
   new: [{ status: "qualification", label: "Qualifier", color: "primary", icon: "mdi-arrow-right", variant: "flat" }],
   qualification: [{ status: "proposal", label: "Créer la proposition", color: "primary", icon: "mdi-arrow-right", variant: "flat" }, { status: "closed_lost", label: "Marquer perdue", color: "error", icon: "mdi-close", variant: "tonal" }],
   proposal: [{ status: "negotiation", label: "Passer en négociation", color: "primary", icon: "mdi-arrow-right", variant: "flat" }, { status: "closed_lost", label: "Marquer perdue", color: "error", icon: "mdi-close", variant: "tonal" }],
-  negotiation: [{ status: "closed_won", label: "Marquer gagnée", color: "success", icon: "mdi-trophy-outline", variant: "flat" }, { status: "closed_lost", label: "Marquer perdue", color: "error", icon: "mdi-close", variant: "tonal" }],
+  negotiation: [{ status: "closed_won", label: "Gagner et créer l'événement", color: "success", icon: "mdi-calendar-check-outline", variant: "flat", createEvent: true }, { status: "closed_lost", label: "Marquer perdue", color: "error", icon: "mdi-close", variant: "tonal" }],
 }
 const transitions = computed(() => transitionMap[opportunity.value?.status] ?? [])
 
@@ -49,7 +50,32 @@ async function runAction(action) {
   finally { actionLoading.value = false }
 }
 
-function changeStatus(status) { return runAction(async () => { opportunity.value = await opportunityService.updateStatus(route.params.id, status) }) }
+function runTransition(transition) {
+  return runAction(async () => {
+    opportunity.value = await opportunityService.updateStatus(
+      route.params.id,
+      transition.status,
+    )
+
+    if (transition.createEvent) {
+      await createEvent()
+    }
+  })
+}
+
+function createEvent() {
+  return router.push({
+    name: "EventCreate",
+    query: {
+      opportunityId: opportunity.value.id,
+      companyId: opportunity.value.company_id,
+      contactId: opportunity.value.contact_id,
+      assignedUserId: opportunity.value.commercial_id,
+      title: opportunity.value.title,
+      source: "opportunity",
+    },
+  })
+}
 async function deleteOpportunity() {
   if (!window.confirm(`Supprimer l'opportunité ${opportunity.value.title} ?`)) return
   await runAction(async () => { await opportunityService.delete(route.params.id); await router.push({ name: "Opportunities" }) })

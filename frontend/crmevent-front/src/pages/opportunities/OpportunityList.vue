@@ -1,7 +1,7 @@
 <template>
   <DashboardLayout>
     <div class="page-header">
-      <div><h1>Opportunités</h1><p>Gestion du pipeline commercial</p></div>
+      <div><h1>Opportunités</h1><p>Gestion de l'opportunité commerciale</p></div>
       <v-btn color="primary" prepend-icon="mdi-plus" @click="goToCreate">Nouvelle opportunité</v-btn>
     </div>
     <OpportunityTable />

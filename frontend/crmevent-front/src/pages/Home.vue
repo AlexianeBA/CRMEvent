@@ -9,7 +9,7 @@
 
       <v-list class="mb-6">
         <v-list-item>✔ Gestion des contacts</v-list-item>
-        <v-list-item>✔ Pipeline commercial</v-list-item>
+        <v-list-item>✔ Opportunités commerciales</v-list-item>
         <v-list-item>✔ Événements</v-list-item>
         <v-list-item>✔ Devis & facturation</v-list-item>
       </v-list>

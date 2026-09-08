@@ -76,9 +76,9 @@ const typeLabels = {
 const statusLabels = {
   draft: "Brouillon",
   scheduled: "Planifié",
-  held: "Terminé",
+  held: "Réalisé",
   canceled: "Annulé",
-  locked: "Verrouillé",
+  locked: "Clôturé",
 }
 
 const generalFields = [
@@ -100,7 +100,7 @@ const generalFields = [
     key: "duration",
     label: "Durée",
     formatter: (value) =>
-      value ? `${value} minutes` : "—",
+      value ? `${value} h` : "—",
   },
   {
     key: "location",

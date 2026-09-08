@@ -27,6 +27,11 @@ def create_event(db: Session, data: EventCreate):
         raise HTTPException(status_code=404, detail=f"Opportunity {data.opportunity_id} not found")
     if opportunity.company_id != data.company_id:
         raise HTTPException(status_code=422, detail="L'opportunité n'appartient pas à l'entreprise sélectionnée")
+    if opportunity.status != "closed_won":
+        raise HTTPException(
+            status_code=422,
+            detail="Seule une opportunité gagnée peut être transformée en événement",
+        )
 
     user = db.query(Users).filter(Users.id == data.assigned_user_id).first()
     if not user:
@@ -101,6 +106,11 @@ def update_event(db: Session, event: Event, data: EventUpdate):
         raise HTTPException(status_code=404, detail=f"Opportunity {opportunity_id} not found")
     if opportunity.company_id != company_id:
         raise HTTPException(status_code=422, detail="L'opportunité n'appartient pas à l'entreprise sélectionnée")
+    if opportunity.status != "closed_won":
+        raise HTTPException(
+            status_code=422,
+            detail="Un événement doit rester rattaché à une opportunité gagnée",
+        )
     if not db.query(Users).filter(Users.id == assigned_user_id).first():
         raise HTTPException(status_code=404, detail=f"User {assigned_user_id} not found")
     if contact_id is not None:
@@ -122,8 +132,8 @@ def update_event_status(db: Session, event_id: int, new_status: str):
     if not event:
         raise HTTPException(status_code=404, detail=f"Event {event_id} not found")
     
-    if event.status in {"held", "canceled", "locked"}:
-        raise HTTPException(status_code=400, detail="Cannot update an event that is held, canceled, or locked")
+    if event.status == "locked":
+        raise HTTPException(status_code=400, detail="Un événement clôturé ne peut plus changer de statut")
     
     ensure_transition_allowed(EVENT_TRANSITIONS, event.status, new_status, "Event")
     event.status = new_status
@@ -132,6 +142,11 @@ def update_event_status(db: Session, event_id: int, new_status: str):
     return event
 
 def delete_event(db: Session, event: Event):
+    if event.status not in {"draft", "canceled"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Seul un événement brouillon ou annulé peut être supprimé",
+        )
     if event.quotes:
         raise HTTPException(
             status_code=409,

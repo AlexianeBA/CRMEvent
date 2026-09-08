@@ -17,8 +17,8 @@
 </template>
 
 <script setup>
-import { ref } from "vue"
-import { useRouter } from "vue-router"
+import { onMounted, ref } from "vue"
+import { useRoute, useRouter } from "vue-router"
 
 import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import EditPage from "@/components/common/EditPage.vue"
@@ -26,6 +26,7 @@ import EventForm from "@/components/event/EventForm.vue"
 import { eventService } from "@/services/eventService"
 
 const router = useRouter()
+const route = useRoute()
 
 const eventFormRef = ref(null)
 
@@ -140,8 +141,26 @@ function normalizeOptionalId(value) {
 
 
 function goBack() {
+  if (route.query.source === "opportunity" && route.query.opportunityId) {
+    router.push({
+      name: "OpportunityView",
+      params: { id: route.query.opportunityId },
+    })
+    return
+  }
+
   router.push({
     name: "Events",
   })
 }
+
+onMounted(() => {
+  Object.assign(form.value, {
+    title: String(route.query.title ?? ""),
+    companyId: normalizeOptionalId(route.query.companyId),
+    opportunityId: normalizeOptionalId(route.query.opportunityId),
+    assignedUserId: normalizeOptionalId(route.query.assignedUserId),
+    contactId: normalizeOptionalId(route.query.contactId),
+  })
+})
 </script>

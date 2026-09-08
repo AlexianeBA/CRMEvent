@@ -32,6 +32,16 @@ export const eventService = {
     return response.data
   },
 
+  async updateStatus(id, status) {
+    const response = await api.patch(
+      `/events/${id}/status`,
+      null,
+      { params: { status } },
+    )
+
+    return response.data
+  },
+
   async delete(id) {
     await api.delete(`/events/${id}`)
   },

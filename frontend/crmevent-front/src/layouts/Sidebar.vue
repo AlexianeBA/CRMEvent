@@ -10,7 +10,7 @@
 
     <RouterLink to="/contacts">Contacts</RouterLink>
 
-    <RouterLink to="/opportunities">Pipeline</RouterLink>
+    <RouterLink to="/opportunities">Opportunités</RouterLink>
 
     <RouterLink to="/events">Evènements</RouterLink>
 

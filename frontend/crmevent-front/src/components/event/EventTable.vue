@@ -2,7 +2,7 @@
   <DataTable
     :items="store.events"
     :columns="columns"
-    :search-fields="['title', 'type', 'date', 'duration', 'location']"
+    :search-fields="['title', 'type', 'date', 'duration', 'location', 'status']"
     :loading="store.loading"
   >
   <template #actions="{ item }">
@@ -15,6 +15,7 @@
         />
 
         <v-btn
+          v-if="['draft', 'scheduled'].includes(item.status)"
           icon="mdi-pencil-outline"
           variant="text"
           size="small"
@@ -22,6 +23,7 @@
         />
 
         <v-btn
+          v-if="['draft', 'canceled'].includes(item.status)"
           icon="mdi-delete-outline"
           variant="text"
           size="small"
@@ -42,6 +44,20 @@ import DataTable from "@/components/common/DataTable.vue"
 const router = useRouter()
 const store = useEventStore()
 
+const typeLabels = {
+  webinar: "Webinaire",
+  workshop: "Atelier",
+  conference: "Conférence",
+}
+
+const statusLabels = {
+  draft: "Brouillon",
+  scheduled: "Planifié",
+  held: "Réalisé",
+  canceled: "Annulé",
+  locked: "Clôturé",
+}
+
 const columns = [
   {
     key: "title",
@@ -50,6 +66,7 @@ const columns = [
   {
     key: "type",
     label: "Type",
+    formatter: (value) => typeLabels[value] ?? value,
   },
   {
     key: "date",
@@ -58,10 +75,16 @@ const columns = [
   {
     key: "duration",
     label: "Durée",
+    formatter: (value) => `${value} h`,
   },
   {
     key: "location",
     label: "Localisation",
+  },
+  {
+    key: "status",
+    label: "Statut",
+    formatter: (value) => statusLabels[value] ?? value,
   },
 ]
 function viewEvent(event) {

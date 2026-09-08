@@ -1,6 +1,6 @@
 <template>
   <section class="card">
-    <div class="card-header"><div><h3>Pipeline commercial</h3><p>Répartition des opportunités</p></div><v-btn variant="text" size="small" @click="router.push({ name: 'Opportunities' })">Voir tout</v-btn></div>
+    <div class="card-header"><div><h3>Opportunités commerciales</h3><p>Répartition des opportunités</p></div><v-btn variant="text" size="small" @click="router.push({ name: 'Opportunities' })">Voir tout</v-btn></div>
     <v-progress-linear v-if="loading" indeterminate />
     <div v-else class="pipeline">
       <div v-for="stage in stages" :key="stage.status" class="stage">

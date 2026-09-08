@@ -160,7 +160,8 @@ const filteredOpportunities = computed(() => {
   if (!model.value.companyId) return []
 
   return opportunities.value.filter(
-    (opportunity) => opportunity.company_id === model.value.companyId,
+    (opportunity) => opportunity.company_id === model.value.companyId
+      && opportunity.status === "closed_won",
   )
 })
 
