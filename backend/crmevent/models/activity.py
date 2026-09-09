@@ -8,6 +8,7 @@ class Activity(Base):
     id = Column(Integer, primary_key=True, index=True)
     type = Column(Enum("call", "email", "meeting", "note", name="activity_type"), nullable=False)
     content = Column(String, nullable=False)
+    email_subject = Column(String, nullable=True)
     opportunity_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False)
     status = Column(Enum("draft", "planned", "done", "canceled", name="activity_status"), nullable=False, default="draft")
     created_at = Column(String, nullable=False)

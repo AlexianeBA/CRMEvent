@@ -25,6 +25,7 @@
               {{ statusLabels[activity.status] }}
             </v-chip>
           </div>
+          <strong v-if="activity.type === 'email'" class="email-subject">{{ activity.email_subject }}</strong>
           <p>{{ activity.content }}</p>
           <div v-if="activity.scheduled_at" class="scheduled-date">
             <v-icon icon="mdi-calendar-clock" size="small" />
@@ -36,7 +37,8 @@
           <v-btn v-if="auth.canManageCrm && canEdit(activity)" icon="mdi-pencil-outline" size="small" variant="text" title="Modifier" @click="openEdit(activity)" />
           <v-btn v-if="auth.canManageCrm && activity.status === 'draft' && isSchedulable(activity)" size="small" variant="tonal" prepend-icon="mdi-calendar-clock" @click="openSchedule(activity)">Planifier</v-btn>
           <v-btn v-if="auth.canManageCrm && activity.status === 'planned' && isSchedulable(activity)" size="small" variant="text" prepend-icon="mdi-calendar-edit" @click="openSchedule(activity)">Replanifier</v-btn>
-          <v-btn v-if="auth.canManageCrm && activity.status === 'draft' && !isSchedulable(activity)" size="small" color="success" variant="tonal" @click="changeStatus(activity, 'done')">Terminer</v-btn>
+          <v-btn v-if="auth.canManageCrm && activity.status === 'draft' && activity.type === 'email'" size="small" color="primary" variant="tonal" prepend-icon="mdi-send" :loading="sendingId === activity.id" @click="sendActivityEmail(activity)">Envoyer</v-btn>
+          <v-btn v-if="auth.canManageCrm && activity.status === 'draft' && activity.type === 'note'" size="small" color="success" variant="tonal" @click="changeStatus(activity, 'done')">Terminer</v-btn>
           <v-btn v-if="auth.canManageCrm && activity.status === 'planned'" size="small" color="success" variant="tonal" @click="changeStatus(activity, 'done')">Terminer</v-btn>
           <v-btn v-if="auth.canManageCrm && canEdit(activity)" icon="mdi-cancel" size="small" color="warning" variant="text" title="Annuler" @click="changeStatus(activity, 'canceled')" />
           <v-btn v-if="auth.canDeleteCrm" icon="mdi-delete-outline" size="small" color="error" variant="text" title="Supprimer" @click="deleteActivity(activity)" />
@@ -51,6 +53,7 @@
         <v-alert v-if="dialogError" type="error" variant="tonal" class="mb-4">{{ dialogError }}</v-alert>
         <v-form ref="formRef" @submit.prevent="saveActivity">
           <v-select v-model="form.type" :items="types" item-title="label" item-value="value" label="Type" variant="outlined" :rules="[rules.required]" />
+          <v-text-field v-if="form.type === 'email'" v-model="form.emailSubject" label="Objet de l’email" variant="outlined" counter="255" :rules="[rules.required, rules.subjectMaxLength]" />
           <v-textarea v-model="form.content" label="Compte rendu ou note" variant="outlined" rows="5" counter="1000" :rules="[rules.required, rules.maxLength]" />
         </v-form>
       </v-card-text>
@@ -95,6 +98,7 @@ const auth = useAuthStore()
 const activities = ref([])
 const loading = ref(false)
 const saving = ref(false)
+const sendingId = ref(null)
 const error = ref("")
 const dialogError = ref("")
 const dialog = ref(false)
@@ -104,7 +108,7 @@ const scheduledAt = ref("")
 const scheduleError = ref("")
 const formRef = ref(null)
 const editingActivity = ref(null)
-const form = reactive({ type: "note", content: "" })
+const form = reactive({ type: "note", content: "", emailSubject: "" })
 
 const types = [
   { label: "Note", value: "note" },
@@ -120,6 +124,7 @@ const statusColors = { draft: "grey", planned: "blue", done: "success", canceled
 const rules = {
   required: (value) => Boolean(String(value ?? "").trim()) || "Ce champ est obligatoire",
   maxLength: (value) => String(value ?? "").length <= 1000 || "1000 caractères maximum",
+  subjectMaxLength: (value) => String(value ?? "").length <= 255 || "255 caractères maximum",
 }
 const minimumScheduleDate = new Date(Date.now() + 60_000).toISOString().slice(0, 16)
 
@@ -138,14 +143,14 @@ async function loadActivities() {
 
 function openCreate() {
   editingActivity.value = null
-  Object.assign(form, { type: "note", content: "" })
+  Object.assign(form, { type: "note", content: "", emailSubject: "" })
   dialogError.value = ""
   dialog.value = true
 }
 
 function openEdit(activity) {
   editingActivity.value = activity
-  Object.assign(form, { type: activity.type, content: activity.content })
+  Object.assign(form, { type: activity.type, content: activity.content, emailSubject: activity.email_subject ?? "" })
   dialogError.value = ""
   dialog.value = true
 }
@@ -156,7 +161,11 @@ async function saveActivity() {
   saving.value = true
   dialogError.value = ""
   try {
-    const payload = { type: form.type, content: form.content.trim() }
+    const payload = {
+      type: form.type,
+      content: form.content.trim(),
+      email_subject: form.type === "email" ? form.emailSubject.trim() : null,
+    }
     if (editingActivity.value) {
       await activityService.update(editingActivity.value.id, payload)
     } else {
@@ -169,6 +178,21 @@ async function saveActivity() {
     dialogError.value = err.response?.data?.detail ?? "Impossible d'enregistrer l'activité"
   } finally {
     saving.value = false
+  }
+}
+
+async function sendActivityEmail(activity) {
+  if (!window.confirm(`Envoyer l’email « ${activity.email_subject} » au contact de l’opportunité ?`)) return
+  sendingId.value = activity.id
+  error.value = ""
+  try {
+    await activityService.sendEmail(activity.id)
+    await loadActivities()
+    emit("changed")
+  } catch (err) {
+    error.value = err.response?.data?.detail ?? "Impossible d'envoyer l'email"
+  } finally {
+    sendingId.value = null
   }
 }
 
@@ -256,6 +280,7 @@ onMounted(loadActivities)
 .activity-content { flex: 1; min-width: 0; }
 .activity-title { display: flex; align-items: center; gap: 10px; }
 .activity-content p { margin: 7px 0; white-space: pre-wrap; }
+.email-subject { display: block; margin-top: 7px; }
 .activity-content small { color: #6b7280; }
 .scheduled-date { display: flex; align-items: center; gap: 6px; margin: 8px 0; color: #1d4ed8; font-weight: 600; }
 .activity-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; flex-wrap: wrap; }

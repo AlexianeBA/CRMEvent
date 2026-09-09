@@ -46,8 +46,8 @@ const props = defineProps({
 const entries = ref([])
 const loading = ref(false)
 const error = ref("")
-const actionColors = { created: "success", updated: "blue", status_changed: "orange", deleted: "error" }
-const actionIcons = { created: "mdi-plus", updated: "mdi-pencil", status_changed: "mdi-swap-horizontal", deleted: "mdi-delete" }
+const actionColors = { created: "success", updated: "blue", status_changed: "orange", email_sent: "indigo", deleted: "error" }
+const actionIcons = { created: "mdi-plus", updated: "mdi-pencil", status_changed: "mdi-swap-horizontal", email_sent: "mdi-email-check-outline", deleted: "mdi-delete" }
 const entityLabels = { company: "Entreprise", contact: "Contact", opportunity: "Opportunité", event: "Événement", quote: "Devis", invoice: "Facture" }
 
 async function loadHistory() {

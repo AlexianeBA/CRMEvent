@@ -22,6 +22,23 @@ def create(data: ActivityCreate, db: Session = Depends(get_db), current_user = D
                    opportunity_id=opportunity.id)
     return activity
 
+
+@router.post("/{activity_id}/send-email", response_model=ActivityRead)
+def send_email(
+    activity_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_roles("admin", "manager", "commercial")),
+):
+    activity, recipient = service.send_activity_email(db, activity_id, current_user)
+    opportunity = get_opportunity(db, activity.opportunity_id)
+    record_history(
+        db, current_user, "email_sent", "opportunity", opportunity.id, opportunity.title,
+        f"Email « {activity.email_subject} » envoyé à {recipient}",
+        company_id=opportunity.company_id, contact_id=opportunity.contact_id,
+        opportunity_id=opportunity.id,
+    )
+    return activity
+
 @router.get("/", response_model=list[ActivityRead])
 def list_by_opportunity(
     db: Session = Depends(get_db),

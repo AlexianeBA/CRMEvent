@@ -28,6 +28,11 @@ export const activityService = {
     return response.data
   },
 
+  async sendEmail(id) {
+    const response = await api.post(`/activities/${id}/send-email`)
+    return response.data
+  },
+
   async delete(id) {
     await api.delete(`/activities/${id}`)
   },
