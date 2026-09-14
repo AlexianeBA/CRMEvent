@@ -9,6 +9,8 @@ services:
       - .env
     environment:
       DATABASE_URL: sqlite:///./data/crm.db
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      RESET_PASSWORD_EXPIRE_MINUTES: ${RESET_PASSWORD_EXPIRE_MINUTES:-30}
     ports:
       - "5000:5000"
     volumes:

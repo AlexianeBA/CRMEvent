@@ -16,6 +16,16 @@ const routes = [
     component: Login,
   },
   {
+    path: "/forgot-password",
+    name: "ForgotPassword",
+    component: () => import("@/pages/ForgotPassword.vue"),
+  },
+  {
+    path: "/reset-password/:token",
+    name: "ResetPassword",
+    component: () => import("@/pages/ResetPassword.vue"),
+  },
+  {
     path: "/register",
     component: Register,
   },
@@ -174,6 +184,7 @@ const router = createRouter({
   routes,
 })
 
+const publicRoutes = new Set(["ForgotPassword", "ResetPassword"])
 const publicPaths = new Set(["/", "/login", "/register"])
 const crmWriteRoutes = new Set([
   "CompanyCreate", "CompanyEdit", "ContactCreate", "ContactEdit",
@@ -182,7 +193,7 @@ const crmWriteRoutes = new Set([
 ])
 
 router.beforeEach(async (to) => {
-  if (publicPaths.has(to.path)) return true
+  if (publicPaths.has(to.path) || publicRoutes.has(to.name)) return true
 
   const auth = useAuthStore(pinia)
   if (!auth.initialized) {

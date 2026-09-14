@@ -4,6 +4,7 @@ from crmevent.models.users import Users
 from fastapi import HTTPException
 
 from crmevent.schemas.users import UsersCreate, UserAdminCreate, UserAdminUpdate
+from crmevent.core.security import decode_password_reset_token, password_fingerprint_matches
 
 pwd_context = CryptContext(
     schemes=["bcrypt_sha256", "bcrypt"],
@@ -85,3 +86,17 @@ def authenticate_user(db: Session, email: str, password: str):
     if not verify_password(password, user.password_hash):
         return None
     return user
+
+
+def reset_forgotten_password(db: Session, token: str, new_password: str):
+    email, fingerprint = decode_password_reset_token(token)
+    user = db.query(Users).filter(Users.email == email).first()
+    if not user or not user.is_active or not password_fingerprint_matches(user.password_hash, fingerprint):
+        raise HTTPException(status_code=400, detail="Lien de réinitialisation invalide ou expiré")
+    if verify_password(new_password, user.password_hash):
+        raise HTTPException(
+            status_code=400,
+            detail="Le nouveau mot de passe doit être différent de l'ancien",
+        )
+    user.password_hash = hash_password(new_password)
+    db.commit()

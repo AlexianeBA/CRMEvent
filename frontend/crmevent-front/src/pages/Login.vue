@@ -26,6 +26,10 @@
         >
           Se connecter
         </v-btn>
+
+        <div class="text-center mt-4">
+          <router-link to="/forgot-password">Mot de passe oublié ?</router-link>
+        </div>
       </v-form>
 
       <p class="text-center mt-4">
