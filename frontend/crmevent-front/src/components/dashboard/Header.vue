@@ -5,7 +5,45 @@
       <p>Bienvenue sur CRM Event</p>
     </div>
 
-    <v-menu location="bottom end">
+    <div class="header-actions">
+      <v-menu v-model="notificationMenu" location="bottom end" :close-on-content-click="false">
+        <template #activator="{ props }">
+          <v-btn v-bind="props" icon variant="text" title="Notifications">
+            <v-badge :content="notifications.unreadCount" :model-value="notifications.unreadCount > 0" color="error">
+              <v-icon icon="mdi-bell-outline" />
+            </v-badge>
+          </v-btn>
+        </template>
+
+        <v-card width="390" max-width="calc(100vw - 24px)" class="notification-menu">
+          <div class="notification-header">
+            <strong>Notifications</strong>
+            <v-btn v-if="notifications.unreadCount" size="small" variant="text" @click="notifications.markAllAsRead()">Tout lire</v-btn>
+          </div>
+          <v-alert v-if="notifications.error" type="error" density="compact" variant="tonal" class="ma-3">{{ notifications.error }}</v-alert>
+          <div v-if="notifications.loading && notifications.items.length === 0" class="notification-state">Chargement...</div>
+          <div v-else-if="notifications.items.length === 0" class="notification-state">Aucune notification</div>
+          <v-list v-else lines="three" class="notification-list">
+            <v-list-item v-for="notification in notifications.items.slice(0, 8)" :key="notification.id" :class="{ unread: !notification.is_read }" @click="openNotification(notification)">
+              <template #prepend>
+                <v-avatar :color="severityColors[notification.severity]" variant="tonal" size="38">
+                  <v-icon :icon="typeIcons[notification.type] ?? 'mdi-bell-outline'" size="small" />
+                </v-avatar>
+              </template>
+              <v-list-item-title>{{ notification.title }}</v-list-item-title>
+              <v-list-item-subtitle>{{ notification.message }}</v-list-item-subtitle>
+              <small>{{ formatDate(notification.created_at) }}</small>
+              <template #append>
+                <v-btn icon="mdi-close" size="x-small" variant="text" title="Archiver" @click.stop="notifications.archive(notification)" />
+              </template>
+            </v-list-item>
+          </v-list>
+          <v-divider />
+          <v-card-actions><v-btn block variant="text" @click="openNotificationCenter">Voir toutes les notifications</v-btn></v-card-actions>
+        </v-card>
+      </v-menu>
+
+      <v-menu location="bottom end">
       <template #activator="{ props }">
         <v-btn v-bind="props" variant="text" class="account-button">
           <v-avatar color="primary" size="38">{{ initials }}</v-avatar>
@@ -24,7 +62,8 @@
         <v-divider class="my-2" />
         <v-list-item prepend-icon="mdi-logout" title="Se déconnecter" base-color="error" @click="auth.logout()" />
       </v-list>
-    </v-menu>
+      </v-menu>
+    </div>
   </header>
 
   <v-dialog v-model="profileDialog" max-width="500">
@@ -79,13 +118,15 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from "vue"
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
+import { useNotificationStore } from "@/stores/notifications"
 
 defineOptions({ name: "DashboardHeader" })
 
 const auth = useAuthStore()
+const notifications = useNotificationStore()
 const route = useRoute()
 const router = useRouter()
 const profileDialog = ref(false)
@@ -95,6 +136,8 @@ const passwordSaving = ref(false)
 const passwordError = ref("")
 const passwordFormRef = ref(null)
 const showPasswords = ref(false)
+const notificationMenu = ref(false)
+let notificationTimer
 const passwordForm = reactive({ currentPassword: "", newPassword: "", confirmPassword: "" })
 
 const roleLabels = { admin: "Administrateur", manager: "Manager", commercial: "Commercial", comptable: "Comptable" }
@@ -117,6 +160,15 @@ const rules = {
   required: (value) => Boolean(value) || "Ce champ est obligatoire",
   passwordLength: (value) => String(value ?? "").length >= 8 || "8 caractères minimum",
   passwordConfirmation: (value) => value === passwordForm.newPassword || "Les mots de passe ne correspondent pas",
+}
+const severityColors = { info: "primary", warning: "warning", error: "error" }
+const typeIcons = {
+  event_upcoming: "mdi-calendar-clock",
+  opportunity_inactive: "mdi-briefcase-clock-outline",
+  quote_unanswered: "mdi-file-clock-outline",
+  invoice_due: "mdi-receipt-clock-outline",
+  invoice_overdue: "mdi-alert-circle-outline",
+  task_assigned: "mdi-clipboard-check-outline",
 }
 
 function resetPasswordForm() {
@@ -155,11 +207,33 @@ async function submitPassword() {
 function goToAdmin() {
   router.push({ name: "AdminUsers" })
 }
+
+async function openNotification(notification) {
+  await notifications.markAsRead(notification)
+  notificationMenu.value = false
+  if (notification.target_url) await router.push(notification.target_url)
+}
+
+function openNotificationCenter() {
+  notificationMenu.value = false
+  router.push({ name: "Notifications" })
+}
+
+function formatDate(value) {
+  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value))
+}
+
+onMounted(() => {
+  notifications.refresh({ synchronize: true })
+  notificationTimer = window.setInterval(() => notifications.refresh({ synchronize: true }), 60_000)
+})
+onBeforeUnmount(() => window.clearInterval(notificationTimer))
 </script>
 
 <style scoped>
 header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: white; border-bottom: 1px solid #eee; }
 header p { margin: 2px 0 0; color: #6b7280; }
+.header-actions { display: flex; align-items: center; gap: 4px; }
 .account-button { height: auto; padding: 6px 10px; text-transform: none; }
 .account-summary { display: flex; flex-direction: column; align-items: flex-start; margin: 0 8px; }
 .account-summary small { color: #6b7280; }
@@ -167,5 +241,10 @@ header p { margin: 2px 0 0; color: #6b7280; }
 .profile-title small { color: #6b7280; font-size: 0.85rem; font-weight: 400; }
 .password-success { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 36px; text-align: center; }
 .password-success p { color: #6b7280; }
+.notification-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 8px; }
+.notification-list { max-height: 480px; overflow-y: auto; }
+.notification-list .unread { background: #eff6ff; }
+.notification-list small { color: #6b7280; }
+.notification-state { padding: 32px 16px; color: #6b7280; text-align: center; }
 @media (max-width: 700px) { .account-summary { display: none; } header { padding: 16px; } }
 </style>

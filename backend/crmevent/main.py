@@ -11,6 +11,7 @@ from crmevent.routers import (
     quote as quote_router,
     invoice as invoice_router,
     history as history_router,
+    notification as notification_router,
 )
 from crmevent.db.base import Base
 from crmevent.db.session import engine
@@ -24,6 +25,7 @@ from crmevent.models.event import Event
 from crmevent.models.quote import Quote
 from crmevent.models.invoice import Invoice
 from crmevent.models.history import HistoryEntry
+from crmevent.models.notification import Notification
 
 app = FastAPI(
     title="CRM API",
@@ -50,6 +52,7 @@ app.include_router(event_router.router)
 app.include_router(quote_router.router)
 app.include_router(invoice_router.router)
 app.include_router(history_router.router)
+app.include_router(notification_router.router)
 @app.get("/")
 def root():
     return {"message": "Bienvenue dans le CRM API"}
