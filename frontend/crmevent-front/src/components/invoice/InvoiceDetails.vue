@@ -27,8 +27,12 @@ const generalFields = [
   { key: "number", label: "Numéro" },
   { key: "title", label: "Titre" },
   { key: "total_amount", label: "Montant total", formatter: (value) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(value ?? 0)) },
+  { key: "amount_paid", label: "Montant payé", formatter: currencyFormatter },
+  { key: "balance_remaining", label: "Solde restant", formatter: currencyFormatter },
   { key: "status", label: "Statut" },
+  { key: "issue_date", label: "Date d’émission", formatter: dateFormatter },
   { key: "due_date", label: "Échéance", formatter: dateFormatter },
+  { key: "payment_terms", label: "Conditions de paiement" },
   { key: "created_at", label: "Créée le", formatter: dateFormatter },
   { key: "updated_at", label: "Modifiée le", formatter: dateFormatter },
 ]
@@ -40,6 +44,7 @@ const relationFields = [
 ]
 const statusLabel = (status) => labels[status] ?? status
 const statusColor = (status) => colors[status] ?? "grey"
+function currencyFormatter(value) { return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(value ?? 0)) }
 </script>
 
 <style scoped>

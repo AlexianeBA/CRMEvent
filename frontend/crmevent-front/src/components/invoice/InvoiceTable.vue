@@ -30,6 +30,7 @@ const columns = [
   { key: "number", label: "Numéro" },
   { key: "title", label: "Titre" },
   { key: "total_amount", label: "Montant", formatter: (value) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(value ?? 0)) },
+  { key: "balance_remaining", label: "Solde", formatter: (value) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(value ?? 0)) },
   { key: "due_date", label: "Échéance", formatter: (value) => value ? new Intl.DateTimeFormat("fr-FR", { dateStyle: "short" }).format(new Date(value)) : "—" },
   { key: "status", label: "Statut" },
 ]

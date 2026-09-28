@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Numeric, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Numeric, DateTime, Text
 from sqlalchemy.orm import relationship
 from crmevent.db.base import Base
 from datetime import datetime
@@ -19,9 +19,32 @@ class Invoice(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    issue_date = Column(DateTime, nullable=False, default=datetime.utcnow)
     due_date = Column(DateTime, nullable=False)
+    payment_terms = Column(Text, nullable=False, default="Paiement à 30 jours")
+    amount_paid = Column(Numeric(10, 2), nullable=False, default=0)
 
     company = relationship("Company", back_populates="invoices")
     quote = relationship("Quote", back_populates="invoices")
     opportunity = relationship("Opportunity", back_populates="invoices")
     assigned_user = relationship("Users", back_populates="assigned_invoices")
+    payments = relationship("InvoicePayment", back_populates="invoice", cascade="all, delete-orphan", order_by="InvoicePayment.paid_at.desc()")
+
+    @property
+    def balance_remaining(self):
+        return max(self.total_amount - self.amount_paid, 0)
+
+
+class InvoicePayment(Base):
+    __tablename__ = "invoice_payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, index=True)
+    amount = Column(Numeric(10, 2), nullable=False)
+    paid_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    payment_method = Column(String(50), nullable=False)
+    reference = Column(String(255), nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    invoice = relationship("Invoice", back_populates="payments")

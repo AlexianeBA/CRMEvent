@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from crmevent.db.base import get_db
 from crmevent.models.invoice import Invoice
-from crmevent.schemas.invoice import InvoiceRead, InvoiceStatus, InvoiceUpdate
+from crmevent.schemas.invoice import InvoiceRead, InvoiceStatus, InvoiceUpdate, InvoicePaymentCreate, InvoicePaymentRead
 from crmevent.services import invoice as service
 from crmevent.core.security import get_current_user, require_roles
 from crmevent.services.history import record_history, status_label
@@ -71,6 +71,47 @@ def patch_status(
                    f"Statut de la facture passé à « {status_label(status)} »", company_id=invoice.company_id,
                    opportunity_id=invoice.opportunity_id, quote_id=invoice.quote_id, invoice_id=invoice.id)
     return invoice
+
+
+@router.post("/{invoice_id}/payments", response_model=InvoicePaymentRead, status_code=201)
+def create_payment(
+    invoice_id: int,
+    data: InvoicePaymentCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("admin", "manager", "comptable")),
+):
+    invoice = service.get_invoice(db, invoice_id)
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Not found")
+    payment = service.add_payment(db, invoice, data)
+    record_history(db, current_user, "payment_added", "invoice", invoice.id, invoice.number,
+                   f"Paiement de {payment.amount} € enregistré", company_id=invoice.company_id,
+                   opportunity_id=invoice.opportunity_id, quote_id=invoice.quote_id, invoice_id=invoice.id)
+    return payment
+
+
+@router.get("/{invoice_id}/payments", response_model=list[InvoicePaymentRead])
+def list_payments(invoice_id: int, db: Session = Depends(get_db)):
+    invoice = service.get_invoice(db, invoice_id)
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Not found")
+    return invoice.payments
+
+
+@router.delete("/{invoice_id}/payments/{payment_id}", status_code=204)
+def remove_payment(
+    invoice_id: int,
+    payment_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles("admin", "manager", "comptable")),
+):
+    invoice = service.get_invoice(db, invoice_id)
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Not found")
+    service.delete_payment(db, invoice, payment_id)
+    record_history(db, current_user, "payment_deleted", "invoice", invoice.id, invoice.number,
+                   "Paiement supprimé", company_id=invoice.company_id, opportunity_id=invoice.opportunity_id,
+                   quote_id=invoice.quote_id, invoice_id=invoice.id)
 
 @router.delete("/{invoice_id}", response_model=dict)
 def delete_invoice(invoice_id: int, db: Session = Depends(get_db), current_user = Depends(require_roles("admin", "manager", "comptable"))):

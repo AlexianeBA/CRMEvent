@@ -32,6 +32,20 @@ export const invoiceService = {
     return response.data
   },
 
+  async getPayments(id) {
+    const response = await api.get(`/invoices/${id}/payments`)
+    return response.data
+  },
+
+  async addPayment(id, payment) {
+    const response = await api.post(`/invoices/${id}/payments`, payment)
+    return response.data
+  },
+
+  async deletePayment(id, paymentId) {
+    await api.delete(`/invoices/${id}/payments/${paymentId}`)
+  },
+
   async delete(id) {
     await api.delete(`/invoices/${id}`)
   },

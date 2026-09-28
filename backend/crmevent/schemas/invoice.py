@@ -19,7 +19,9 @@ class InvoiceBase(BaseModel):
     opportunity_id: int = Field(..., gt=0)
     assigned_user_id: int = Field(..., gt=0)
     status: InvoiceStatus = InvoiceStatus.draft
+    issue_date: datetime
     due_date: datetime
+    payment_terms: str = Field(..., min_length=1, max_length=1000)
 
 class InvoiceCreate(InvoiceBase):
     pass
@@ -65,6 +67,8 @@ class InvoiceRead(InvoiceBase):
     assigned_user_id: int
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    amount_paid: float
+    balance_remaining: float
     company: InvoiceCompanyRead
     quote: InvoiceQuoteRead
     opportunity: InvoiceOpportunityRead
@@ -78,4 +82,28 @@ class InvoiceUpdate(BaseModel):
     total_amount: float | None = Field(default=None, gt=0)
     status: InvoiceStatus | None = None
     due_date: datetime | None = None
+    issue_date: datetime | None = None
+    payment_terms: str | None = Field(default=None, min_length=1, max_length=1000)
+
+
+class InvoicePaymentCreate(BaseModel):
+    amount: float = Field(..., gt=0)
+    paid_at: datetime | None = None
+    payment_method: str = Field(..., min_length=1, max_length=50)
+    reference: str | None = Field(default=None, max_length=255)
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+class InvoicePaymentRead(BaseModel):
+    id: int
+    invoice_id: int
+    amount: float
+    paid_at: datetime
+    payment_method: str
+    reference: str | None = None
+    notes: str | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
     

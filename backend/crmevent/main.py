@@ -26,7 +26,7 @@ from crmevent.models.opportunity import Opportunity
 from crmevent.models.activity import Activity
 from crmevent.models.event import Event
 from crmevent.models.quote import Quote
-from crmevent.models.invoice import Invoice
+from crmevent.models.invoice import Invoice, InvoicePayment
 from crmevent.models.history import HistoryEntry
 from crmevent.models.notification import Notification
 from crmevent.models.task import Task

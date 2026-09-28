@@ -22,7 +22,7 @@ INVOICE_TRANSITIONS = {
     "draft": {"sent", "canceled"},
     "sent": {"paid", "overdue", "canceled"},
     "overdue": {"paid", "canceled"},
-    "paid": {"locked"},
+    "paid": {"sent", "locked"},
     "canceled": {"locked"},
     "locked": set(),
 }

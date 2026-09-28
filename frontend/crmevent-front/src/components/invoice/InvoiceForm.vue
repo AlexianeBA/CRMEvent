@@ -3,7 +3,9 @@
     <div class="form-grid">
       <v-text-field v-model="model.title" label="Titre de la facture" variant="outlined" prepend-inner-icon="mdi-receipt-text-outline" :rules="[rules.required]" class="full-width" />
       <v-text-field v-model.number="model.totalAmount" label="Montant total" type="number" min="0.01" step="0.01" suffix="€" variant="outlined" prepend-inner-icon="mdi-currency-eur" :rules="[rules.required, rules.positiveAmount]" />
+      <v-text-field v-model="model.issueDate" label="Date d’émission" type="date" variant="outlined" prepend-inner-icon="mdi-calendar-start" :rules="[rules.required]" />
       <v-text-field v-model="model.dueDate" label="Date d’échéance" type="date" variant="outlined" prepend-inner-icon="mdi-calendar-clock" :rules="[rules.required]" />
+      <v-textarea v-model="model.paymentTerms" label="Conditions de paiement" variant="outlined" prepend-inner-icon="mdi-text-box-check-outline" rows="3" counter="1000" :rules="[rules.required]" class="full-width" />
     </div>
   </v-form>
 </template>

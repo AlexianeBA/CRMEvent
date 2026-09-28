@@ -223,6 +223,9 @@ def _create_invoice_notifications(db: Session, user_id: int, now: datetime):
         if not due_at:
             continue
         if due_at < now:
+            if invoice.status != "overdue":
+                invoice.status = "overdue"
+                db.commit()
             create_notification(db, NotificationCreate(
                 user_id=user_id, title="Facture en retard",
                 message=f"La facture {invoice.number} est arrivée à échéance.",
