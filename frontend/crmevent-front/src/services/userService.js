@@ -3,7 +3,7 @@ import api from "@/api/api"
 export const userService = {
   async getUsers() {
     const response = await api.get(
-      "/auth/users/list",
+      "/auth/users/options",
     )
 
     return response.data

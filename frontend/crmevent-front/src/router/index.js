@@ -39,6 +39,26 @@ const routes = [
     component: () => import("@/pages/Notifications.vue"),
   },
   {
+    path: "/tasks",
+    name: "Tasks",
+    component: () => import("@/pages/tasks/TaskList.vue"),
+  },
+  {
+    path: "/tasks/new",
+    name: "TaskCreate",
+    component: () => import("@/pages/tasks/TaskCreate.vue"),
+  },
+  {
+    path: "/tasks/:id/edit",
+    name: "TaskEdit",
+    component: () => import("@/pages/tasks/TaskEdit.vue"),
+  },
+  {
+    path: "/tasks/:id",
+    name: "TaskView",
+    component: () => import("@/pages/tasks/TaskView.vue"),
+  },
+  {
   path: "/companies",
   name: "Companies",
   component: () =>

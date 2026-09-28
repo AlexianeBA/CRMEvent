@@ -19,6 +19,7 @@ class InvoiceBase(BaseModel):
     opportunity_id: int = Field(..., gt=0)
     assigned_user_id: int = Field(..., gt=0)
     status: InvoiceStatus = InvoiceStatus.draft
+    due_date: datetime
 
 class InvoiceCreate(InvoiceBase):
     pass
@@ -76,4 +77,5 @@ class InvoiceUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     total_amount: float | None = Field(default=None, gt=0)
     status: InvoiceStatus | None = None
+    due_date: datetime | None = None
     

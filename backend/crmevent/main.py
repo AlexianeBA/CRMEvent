@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,6 +14,7 @@ from crmevent.routers import (
     invoice as invoice_router,
     history as history_router,
     notification as notification_router,
+    task as task_router,
 )
 from crmevent.db.base import Base
 from crmevent.db.session import engine
@@ -26,6 +29,8 @@ from crmevent.models.quote import Quote
 from crmevent.models.invoice import Invoice
 from crmevent.models.history import HistoryEntry
 from crmevent.models.notification import Notification
+from crmevent.models.task import Task
+from crmevent.services.notification_scheduler import notification_scheduler
 
 app = FastAPI(
     title="CRM API",
@@ -53,6 +58,7 @@ app.include_router(quote_router.router)
 app.include_router(invoice_router.router)
 app.include_router(history_router.router)
 app.include_router(notification_router.router)
+app.include_router(task_router.router)
 @app.get("/")
 def root():
     return {"message": "Bienvenue dans le CRM API"}
@@ -60,3 +66,15 @@ def root():
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    app.state.notification_scheduler = asyncio.create_task(notification_scheduler())
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    scheduler = getattr(app.state, "notification_scheduler", None)
+    if scheduler:
+        scheduler.cancel()
+        try:
+            await scheduler
+        except asyncio.CancelledError:
+            pass

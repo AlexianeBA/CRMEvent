@@ -21,7 +21,7 @@ const invoiceFormRef = ref(null)
 const loading = ref(false)
 const saving = ref(false)
 const error = ref("")
-const form = ref({ title: "", totalAmount: null })
+const form = ref({ title: "", totalAmount: null, dueDate: "" })
 
 async function loadInvoice() {
   loading.value = true
@@ -29,6 +29,7 @@ async function loadInvoice() {
     const invoice = await invoiceService.getById(route.params.id)
     form.value.title = invoice.title ?? ""
     form.value.totalAmount = Number(invoice.total_amount)
+    form.value.dueDate = invoice.due_date?.slice(0, 10) ?? ""
   } catch (err) {
     error.value = err.response?.data?.detail ?? "Impossible de charger la facture"
   } finally {
@@ -44,7 +45,11 @@ async function submit() {
   }
   saving.value = true
   try {
-    const invoice = await invoiceService.update(route.params.id, { title: form.value.title.trim(), total_amount: Number(form.value.totalAmount) })
+    const invoice = await invoiceService.update(route.params.id, {
+      title: form.value.title.trim(),
+      total_amount: Number(form.value.totalAmount),
+      due_date: new Date(`${form.value.dueDate}T23:59:59`).toISOString(),
+    })
     await router.push({ name: "InvoiceView", params: { id: invoice.id } })
   } catch (err) {
     error.value = err.response?.data?.detail ?? "Impossible de modifier la facture"

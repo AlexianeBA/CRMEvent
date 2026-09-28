@@ -148,6 +148,7 @@ const pageTitles = {
   events: "Événements",
   quotes: "Devis",
   invoices: "Factures",
+  tasks: "Tâches",
   admin: "Administration",
 }
 const pageTitle = computed(() => {
@@ -169,6 +170,7 @@ const typeIcons = {
   invoice_due: "mdi-receipt-clock-outline",
   invoice_overdue: "mdi-alert-circle-outline",
   task_assigned: "mdi-clipboard-check-outline",
+  task_due: "mdi-clipboard-clock-outline",
 }
 
 function resetPasswordForm() {

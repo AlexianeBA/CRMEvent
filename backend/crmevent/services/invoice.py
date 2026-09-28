@@ -4,6 +4,7 @@ from crmevent.models.quote import Quote
 from crmevent.schemas.invoice import InvoiceUpdate, InvoiceStatus
 from crmevent.models.users import Users
 from sqlalchemy import asc, desc
+from datetime import datetime, timedelta, timezone
 
 
 from fastapi import HTTPException
@@ -59,6 +60,7 @@ def create_invoice_from_quote(db: Session, quote_id: int):
         opportunity_id=quote.opportunity_id,
         assigned_user_id=quote.assigned_user_id,
         status="draft",
+        due_date=datetime.now(timezone.utc) + timedelta(days=30),
     )
 
     db.add(invoice)
@@ -126,6 +128,9 @@ def update_invoice(db: Session, invoice: Invoice, data: InvoiceUpdate):
         forbidden = IMMUTABLE_FIELDS_AFTER_SENT.intersection(payload.keys())
         if forbidden:
             raise HTTPException(status_code=400, detail=f"Immutable fields after sent: {', '.join(sorted(forbidden))}")
+
+    if "due_date" in payload and invoice.status != "draft":
+        raise HTTPException(status_code=400, detail="La date d'échéance ne peut être modifiée que sur une facture en brouillon")
 
     if "status" in payload:
         new_status = payload.pop("status").value

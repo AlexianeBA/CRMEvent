@@ -35,3 +35,5 @@ class Users(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    assigned_tasks = relationship("Task", foreign_keys="Task.assigned_user_id", back_populates="assigned_user", cascade="all, delete-orphan")
+    created_tasks = relationship("Task", foreign_keys="Task.created_by_id", back_populates="created_by", cascade="all, delete-orphan")

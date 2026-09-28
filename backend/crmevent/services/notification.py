@@ -1,3 +1,5 @@
+import logging
+import os
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
@@ -12,14 +14,18 @@ from crmevent.models.invoice import Invoice
 from crmevent.models.notification import Notification
 from crmevent.models.opportunity import Opportunity
 from crmevent.models.quote import Quote
+from crmevent.models.task import Task
+from crmevent.models.users import Users
 from crmevent.schemas.notification import NotificationCreate
+from crmevent.services.email import send_email
 
 
 EVENT_REMINDER_HOURS = 24
 OPPORTUNITY_INACTIVE_DAYS = 7
 QUOTE_UNANSWERED_DAYS = 7
-INVOICE_PAYMENT_DAYS = 30
 INVOICE_DUE_WARNING_DAYS = 3
+TASK_DUE_WARNING_HOURS = 24
+logger = logging.getLogger(__name__)
 
 
 def _utc_now() -> datetime:
@@ -45,6 +51,7 @@ def create_notification(db: Session, data: NotificationCreate):
         Notification.deduplication_key == data.deduplication_key,
     ).first()
     if existing:
+        _deliver_notification_email(db, existing)
         return existing
 
     notification = Notification(**data.model_dump(mode="python"))
@@ -58,7 +65,32 @@ def create_notification(db: Session, data: NotificationCreate):
             Notification.deduplication_key == data.deduplication_key,
         ).one()
     db.refresh(notification)
+    _deliver_notification_email(db, notification)
     return notification
+
+
+def _deliver_notification_email(db: Session, notification: Notification):
+    enabled = os.getenv("NOTIFICATION_EMAIL_ENABLED", "false").lower() in {"1", "true", "yes", "on"}
+    severities = {item.strip() for item in os.getenv("NOTIFICATION_EMAIL_SEVERITIES", "warning,error").split(",")}
+    if not enabled or notification.emailed_at or notification.severity not in severities:
+        return
+    user = db.query(Users).filter(Users.id == notification.user_id, Users.is_active == 1).first()
+    if not user:
+        return
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+    target = f"{frontend_url}{notification.target_url}" if notification.target_url else frontend_url
+    try:
+        send_email(
+            recipient=user.email,
+            subject=f"CRMEvent — {notification.title}",
+            body=f"Bonjour,\n\n{notification.message}\n\nConsulter : {target}\n\nL'équipe CRMEvent",
+        )
+    except HTTPException:
+        logger.exception("Échec de l'envoi email pour la notification %s", notification.id)
+        return
+    notification.emailed_at = _utc_now()
+    db.commit()
+    db.refresh(notification)
 
 
 def get_notifications(db: Session, user_id: int, is_read: bool | None = None, skip: int = 0, limit: int = 50):
@@ -187,10 +219,9 @@ def _create_invoice_notifications(db: Session, user_id: int, now: datetime):
         Invoice.status.in_(("sent", "overdue")),
     ).all()
     for invoice in invoices:
-        created_at = _as_utc(invoice.created_at)
-        if not created_at:
+        due_at = _as_utc(invoice.due_date)
+        if not due_at:
             continue
-        due_at = created_at + timedelta(days=INVOICE_PAYMENT_DAYS)
         if due_at < now:
             create_notification(db, NotificationCreate(
                 user_id=user_id, title="Facture en retard",
@@ -207,10 +238,33 @@ def _create_invoice_notifications(db: Session, user_id: int, now: datetime):
             ))
 
 
+def _create_task_notifications(db: Session, user_id: int, now: datetime):
+    limit = now + timedelta(hours=TASK_DUE_WARNING_HOURS)
+    tasks = db.query(Task).filter(
+        Task.assigned_user_id == user_id,
+        Task.status.in_(("todo", "in_progress")),
+    ).all()
+    for task in tasks:
+        due_at = _as_utc(task.due_at)
+        if due_at and due_at <= limit:
+            overdue = due_at < now
+            create_notification(db, NotificationCreate(
+                user_id=user_id,
+                title="Tâche en retard" if overdue else "Tâche bientôt échue",
+                message=f"La tâche « {task.title} » est arrivée à échéance." if overdue else f"La tâche « {task.title} » arrive bientôt à échéance.",
+                type="task_due",
+                severity="error" if overdue else "warning",
+                target_url=f"/tasks/{task.id}",
+                deduplication_key=f"task-due:{task.id}:{due_at.strftime('%Y%m%d%H%M%S')}:{'overdue' if overdue else 'soon'}",
+                scheduled_at=due_at,
+            ))
+
+
 def synchronize_notifications(db: Session, user_id: int):
     now = _utc_now()
     _create_event_notifications(db, user_id, now)
     _create_opportunity_notifications(db, user_id, now)
     _create_quote_notifications(db, user_id, now)
     _create_invoice_notifications(db, user_id, now)
+    _create_task_notifications(db, user_id, now)
     return count_unread_notifications(db, user_id)

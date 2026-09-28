@@ -3,6 +3,7 @@
     <div class="form-grid">
       <v-text-field v-model="model.title" label="Titre de la facture" variant="outlined" prepend-inner-icon="mdi-receipt-text-outline" :rules="[rules.required]" class="full-width" />
       <v-text-field v-model.number="model.totalAmount" label="Montant total" type="number" min="0.01" step="0.01" suffix="€" variant="outlined" prepend-inner-icon="mdi-currency-eur" :rules="[rules.required, rules.positiveAmount]" />
+      <v-text-field v-model="model.dueDate" label="Date d’échéance" type="date" variant="outlined" prepend-inner-icon="mdi-calendar-clock" :rules="[rules.required]" />
     </div>
   </v-form>
 </template>

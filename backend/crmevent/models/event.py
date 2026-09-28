@@ -24,3 +24,4 @@ class Event(Base):
     company = relationship("Company", back_populates="events")
     quotes = relationship("Quote", back_populates="event")
     assigned_user = relationship("Users", back_populates="assigned_events")
+    tasks = relationship("Task", back_populates="event", cascade="all, delete-orphan")

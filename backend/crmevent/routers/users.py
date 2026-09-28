@@ -83,6 +83,11 @@ def list_users(db: Session = Depends(get_db), current_user=Depends(require_roles
     return db.query(service.Users).all()
 
 
+@router.get("/users/options", response_model=list[UsersRead])
+def list_active_user_options(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    return db.query(Users).filter(Users.is_active == 1).order_by(Users.email.asc()).all()
+
+
 @router.get("/me", response_model=UsersRead)
 def me(current_user = Depends(get_current_user)):
     return current_user

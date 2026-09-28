@@ -45,7 +45,7 @@ const store = useNotificationStore()
 const filter = ref("all")
 const filteredNotifications = computed(() => filter.value === "unread" ? store.items.filter((item) => !item.is_read) : store.items)
 const severityColors = { info: "primary", warning: "warning", error: "error" }
-const typeIcons = { event_upcoming: "mdi-calendar-clock", opportunity_inactive: "mdi-briefcase-clock-outline", quote_unanswered: "mdi-file-clock-outline", invoice_due: "mdi-receipt-clock-outline", invoice_overdue: "mdi-alert-circle-outline", task_assigned: "mdi-clipboard-check-outline" }
+const typeIcons = { event_upcoming: "mdi-calendar-clock", opportunity_inactive: "mdi-briefcase-clock-outline", quote_unanswered: "mdi-file-clock-outline", invoice_due: "mdi-receipt-clock-outline", invoice_overdue: "mdi-alert-circle-outline", task_assigned: "mdi-clipboard-check-outline", task_due: "mdi-clipboard-clock-outline" }
 
 async function open(notification) {
   await store.markAsRead(notification)

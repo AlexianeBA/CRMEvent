@@ -22,3 +22,4 @@ class Opportunity(Base):
     events = relationship("Event", back_populates="opportunity")
     commercial = relationship("Users", back_populates="opportunities")
     invoices = relationship("Invoice", back_populates="opportunity")
+    tasks = relationship("Task", back_populates="opportunity", cascade="all, delete-orphan")

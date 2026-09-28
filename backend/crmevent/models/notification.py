@@ -17,7 +17,7 @@ class Notification(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
     message = Column(String, nullable=False)
-    type = Column(Enum("event_upcoming", "opportunity_inactive", "quote_unanswered", "invoice_due", "invoice_overdue", "task_assigned", name="notification_type"), nullable=False)
+    type = Column(Enum("event_upcoming", "opportunity_inactive", "quote_unanswered", "invoice_due", "invoice_overdue", "task_assigned", "task_due", name="notification_type"), nullable=False)
     severity = Column(Enum("info", "warning", "error", name="notification_severity"), nullable=False, default="info")
     target_url = Column(String(500), nullable=True)
     deduplication_key = Column(String(255), nullable=False)
@@ -25,6 +25,7 @@ class Notification(Base):
     read_at = Column(DateTime(timezone=True), nullable=True)
     scheduled_at = Column(DateTime(timezone=True), nullable=True)
     archived_at = Column(DateTime(timezone=True), nullable=True)
+    emailed_at = Column(DateTime(timezone=True), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 

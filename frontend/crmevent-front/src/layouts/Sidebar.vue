@@ -18,6 +18,8 @@
 
     <RouterLink to="/invoices">Factures</RouterLink>
 
+    <RouterLink to="/tasks">Tâches</RouterLink>
+
     <RouterLink v-if="auth.isAdmin" to="/admin/users">Administration</RouterLink>
 
     <div class="account">

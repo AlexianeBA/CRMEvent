@@ -19,6 +19,7 @@ class Invoice(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    due_date = Column(DateTime, nullable=False)
 
     company = relationship("Company", back_populates="invoices")
     quote = relationship("Quote", back_populates="invoices")

@@ -11,6 +11,7 @@ class NotificationType(str, Enum):
     invoice_due = "invoice_due"
     invoice_overdue = "invoice_overdue"
     task_assigned = "task_assigned"
+    task_due = "task_due"
 
 
 class NotificationSeverity(str, Enum):
@@ -43,6 +44,7 @@ class NotificationRead(BaseModel):
     read_at: datetime | None
     scheduled_at: datetime | None
     archived_at: datetime | None
+    emailed_at: datetime | None
     created_at: datetime
 
     class Config:

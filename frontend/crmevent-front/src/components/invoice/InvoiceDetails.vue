@@ -28,6 +28,7 @@ const generalFields = [
   { key: "title", label: "Titre" },
   { key: "total_amount", label: "Montant total", formatter: (value) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(value ?? 0)) },
   { key: "status", label: "Statut" },
+  { key: "due_date", label: "Échéance", formatter: dateFormatter },
   { key: "created_at", label: "Créée le", formatter: dateFormatter },
   { key: "updated_at", label: "Modifiée le", formatter: dateFormatter },
 ]
