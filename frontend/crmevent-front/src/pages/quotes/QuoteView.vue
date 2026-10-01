@@ -11,6 +11,7 @@
       @edit="goToEdit"
     >
       <template #actions>
+        <v-btn v-if="quote" variant="tonal" prepend-icon="mdi-file-pdf-box" :loading="downloading" @click="downloadPdf">Télécharger PDF</v-btn>
         <v-btn v-if="auth.canManageCrm && quote?.status === 'draft'" color="primary" prepend-icon="mdi-send-outline" :loading="actionLoading" @click="changeStatus('sent')">Envoyer</v-btn>
         <v-btn v-if="auth.canManageCrm && quote?.status === 'sent'" color="success" prepend-icon="mdi-check-circle-outline" :loading="actionLoading" @click="acceptQuote">Accepter</v-btn>
         <v-btn v-if="auth.canManageCrm && quote?.status === 'sent'" color="error" variant="tonal" prepend-icon="mdi-close-circle-outline" :loading="actionLoading" @click="changeStatus('rejected')">Refuser</v-btn>
@@ -34,6 +35,7 @@ import QuoteDetails from "@/components/quotes/QuoteDetails.vue"
 import quoteService from "@/services/quotesService"
 import { useAuthStore } from "@/stores/auth"
 import HistoryTimeline from "@/components/history/HistoryTimeline.vue"
+import { downloadResponse } from "@/utils/download"
 
 const route = useRoute()
 const router = useRouter()
@@ -41,9 +43,10 @@ const auth = useAuthStore()
 const quote = ref(null)
 const loading = ref(false)
 const actionLoading = ref(false)
+const downloading = ref(false)
 const error = ref("")
 
-const canEdit = computed(() => auth.canManageCrm && ["draft", "sent"].includes(quote.value?.status))
+const canEdit = computed(() => auth.canManageCrm && quote.value?.status === "draft")
 const canLock = computed(() => ["accepted", "rejected", "expired"].includes(quote.value?.status))
 
 async function loadQuote() {
@@ -75,6 +78,14 @@ function changeStatus(status) {
   return runAction(async () => {
     quote.value = await quoteService.updateStatus(route.params.id, status)
   })
+}
+
+async function downloadPdf() {
+  downloading.value = true
+  error.value = ""
+  try { downloadResponse(await quoteService.downloadPdf(quote.value.id), `${quote.value.number}.pdf`) }
+  catch (err) { error.value = err.response?.data?.detail ?? "Impossible de télécharger le devis" }
+  finally { downloading.value = false }
 }
 
 function acceptQuote() {

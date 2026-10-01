@@ -48,6 +48,14 @@ export const quoteService = {
     async delete(id) {
         await api.delete(`/quotes/${id}`)
     },
+
+    async downloadPdf(id) {
+        return api.get(`/quotes/${id}/pdf`, { responseType: "blob" })
+    },
+
+    async exportExcel(params = {}) {
+        return api.get("/quotes/export/excel", { params, responseType: "blob" })
+    },
 }
 
 export default quoteService

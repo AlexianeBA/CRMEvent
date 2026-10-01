@@ -1,5 +1,7 @@
+import os
+
 from sqlalchemy.orm import Session
-from crmevent.models.invoice import Invoice, InvoicePayment
+from crmevent.models.invoice import Invoice, InvoicePayment, InvoiceLine
 from crmevent.models.quote import Quote
 from crmevent.schemas.invoice import InvoiceUpdate, InvoiceStatus, InvoicePaymentCreate
 from crmevent.models.users import Users
@@ -12,11 +14,13 @@ from decimal import Decimal
 from fastapi import HTTPException
 
 from crmevent.services.workflow import ensure_transition_allowed, INVOICE_TRANSITIONS
+from crmevent.services.document_sequence import next_document_number
 
 
 IMMUTABLE_FIELDS_AFTER_SENT = {
     "quote_id", "company_id", "opportunity_id", "assigned_user_id",
     "number", "title", "total_amount",
+    "vat_rate",
 }
 
 
@@ -32,16 +36,7 @@ def _set_billing_notifications_archived(db: Session, invoice: Invoice, archived:
     ).update(values, synchronize_session=False)
 
 def generate_invoice_number(db: Session):
-    last_invoice = db.query(Invoice).order_by(Invoice.id.desc()).first()
-    if not last_invoice or not last_invoice.number:
-        return "INV-0001"
-
-    try:
-        last_number = int(last_invoice.number.split("-")[1])
-    except Exception:
-        last_number = last_invoice.id
-
-    return f"INV-{last_number + 1:04d}"
+    return next_document_number(db, "invoice")
 
 def create_invoice_from_quote(db: Session, quote_id: int):
     existing_invoice = (
@@ -69,6 +64,7 @@ def create_invoice_from_quote(db: Session, quote_id: int):
         number=generate_invoice_number(db),
         title=quote.title,
         total_amount=quote.total_amount,
+        vat_rate=Decimal(os.getenv("DEFAULT_VAT_RATE", "20")),
         company_id=quote.company_id,
         quote_id=quote.id,
         opportunity_id=quote.opportunity_id,
@@ -79,6 +75,11 @@ def create_invoice_from_quote(db: Session, quote_id: int):
         payment_terms="Paiement à 30 jours",
         amount_paid=Decimal("0.00"),
     )
+    invoice.lines = [InvoiceLine(
+        description=line.description, quantity=line.quantity, unit=line.unit,
+        unit_price_excl_tax=line.unit_price_excl_tax, vat_rate=line.vat_rate,
+        discount_rate=line.discount_rate, position=line.position,
+    ) for line in quote.lines]
 
     db.add(invoice)
     db.commit()
@@ -99,7 +100,7 @@ def refresh_invoice_status(db: Session, invoice: Invoice, commit: bool = True):
         now = now.replace(tzinfo=None)
     new_status = invoice.status
     if invoice.status not in {"draft", "canceled", "locked"}:
-        if invoice.amount_paid >= invoice.total_amount:
+        if invoice.amount_paid >= invoice.total_incl_tax:
             new_status = "paid"
         elif due_date and due_date < now:
             new_status = "overdue"
@@ -206,7 +207,7 @@ def update_invoice_status(db: Session, invoice_id: int, status: InvoiceStatus):
     if not invoice:
         raise HTTPException(status_code=404, detail=f"Invoice {invoice_id} not found")
 
-    if status == InvoiceStatus.paid and invoice.amount_paid < invoice.total_amount:
+    if status == InvoiceStatus.paid and invoice.amount_paid < invoice.total_incl_tax:
         raise HTTPException(status_code=400, detail="La facture ne peut être payée que lorsque son solde est nul")
     if status == InvoiceStatus.overdue:
         raise HTTPException(status_code=400, detail="Le statut en retard est déterminé automatiquement")

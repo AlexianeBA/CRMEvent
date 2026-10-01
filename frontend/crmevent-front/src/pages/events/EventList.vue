@@ -7,14 +7,10 @@
         <p>Gestion des événements</p>
       </div>
 
-      <v-btn
-        v-if="auth.canManageCrm"
-        color="primary"
-        prepend-icon="mdi-plus"
-        @click="goToCreate"
-      >
-        Nouvel événement
-      </v-btn>
+      <div class="page-actions">
+        <v-btn variant="tonal" prepend-icon="mdi-microsoft-excel" :loading="exporting" @click="exportExcel">Exporter en Excel</v-btn>
+        <v-btn v-if="auth.canManageCrm" color="primary" prepend-icon="mdi-plus" @click="goToCreate">Nouvel événement</v-btn>
+      </div>
     </div>
 
     <EventTable />
@@ -27,9 +23,20 @@ import DashboardLayout from "@/layouts/DashboardLayout.vue"
 import EventTable from "@/components/event/EventTable.vue"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
+import { ref } from "vue"
+import { eventService } from "@/services/eventService"
+import { downloadResponse } from "@/utils/download"
 
 const router = useRouter()
 const auth = useAuthStore()
+const exporting = ref(false)
+
+async function exportExcel() {
+  exporting.value = true
+  try { downloadResponse(await eventService.exportExcel(), "evenements.xlsx") }
+  catch (error) { window.alert(error.response?.data?.detail ?? "Impossible d’exporter les événements") }
+  finally { exporting.value = false }
+}
 
 function goToCreate() {
   router.push({
@@ -46,6 +53,7 @@ justify-content:space-between;
 align-items:center;
 margin-bottom:30px;
 }
+.page-actions { display: flex; gap: 10px; }
 
 .btn-primary{
 background:#3B82F6;

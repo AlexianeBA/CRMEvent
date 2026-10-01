@@ -16,6 +16,7 @@
       </template>
     </DetailsCard>
   </div>
+  <v-card class="mt-6" rounded="xl" elevation="0" border><v-card-title>Lignes de prestation</v-card-title><v-table><thead><tr><th>Description</th><th>Quantité</th><th>Prix HT</th><th>Remise</th><th>TVA</th><th>Total HT</th></tr></thead><tbody><tr v-for="line in quote.lines" :key="line.id"><td>{{ line.description }}</td><td>{{ line.quantity }} {{ line.unit }}</td><td>{{ currency(line.unit_price_excl_tax) }}</td><td>{{ line.discount_rate }} %</td><td>{{ line.vat_rate }} %</td><td>{{ currency(line.total_excl_tax) }}</td></tr></tbody></v-table></v-card>
 </template>
 
 <script setup>
@@ -42,6 +43,7 @@ const relationFields = [
 
 function statusLabel(status) { return labels[status] ?? status }
 function statusColor(status) { return colors[status] ?? "grey" }
+function currency(value) { return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(value ?? 0)) }
 </script>
 
 <style scoped>

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="document-head"><div><div class="eyebrow">Organisation événementielle</div><h1>Confirmation d'événement</h1><div class="muted">{{ event.title }}</div></div><div class="meta"><span class="status status-{{ event.status }}">{{ status_label }}</span><br><br><strong>{{ event.number }}</strong></div></div>
+<div class="box"><strong>{{ event.title }}</strong>{% if event.description %}<br><span class="muted">{{ event.description }}</span>{% endif %}</div>
+<table><tr><th>Date</th><th>Durée</th><th>Lieu</th></tr><tr><td>{{ event.date }}</td><td>{{ event.duration }} heure(s)</td><td>{{ event.location }}</td></tr></table>
+<div class="section-title">Participant</div><p>{{ event.company.name }}{% if event.contact %}<br>{{ event.contact.first_name }} {{ event.contact.last_name }}{% endif %}</p>
+<div class="section-title">Organisation</div><p>Type : {{ event.type }}<br>Responsable : {{ event.assigned_user.email }}</p>
+{% endblock %}

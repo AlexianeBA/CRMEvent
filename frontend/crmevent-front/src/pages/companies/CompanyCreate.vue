@@ -36,6 +36,12 @@ const form = ref({
   name: "",
   address: "",
   city: "",
+  postalCode: "",
+  country: "France",
+  email: "",
+  phone: "",
+  siret: "",
+  vatNumber: "",
   contacts: [],
 })
 
@@ -90,6 +96,12 @@ function buildPayload() {
     name: form.value.name.trim(),
     address: normalizeOptionalValue(form.value.address),
     city: normalizeOptionalValue(form.value.city),
+    postal_code: normalizeOptionalValue(form.value.postalCode),
+    country: normalizeOptionalValue(form.value.country),
+    email: normalizeOptionalValue(form.value.email),
+    phone: normalizeOptionalValue(form.value.phone),
+    siret: normalizeOptionalValue(form.value.siret),
+    vat_number: normalizeOptionalValue(form.value.vatNumber),
     contact_ids: form.value.contacts.map(
       (contact) => contact.id,
     ),

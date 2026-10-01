@@ -14,6 +14,7 @@ class InvoiceStatus(str, enum.Enum):
 class InvoiceBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     total_amount: float = Field(..., gt=0)
+    vat_rate: float = Field(default=20, ge=0, le=100)
     quote_id: int = Field(..., gt=0)
     company_id: int = Field(..., gt=0)
     opportunity_id: int = Field(..., gt=0)
@@ -55,6 +56,23 @@ class InvoiceUserRead(BaseModel):
     class Config:
         from_attributes = True
 
+class InvoiceLineRead(BaseModel):
+    id: int
+    description: str
+    quantity: float
+    unit: str
+    unit_price_excl_tax: float
+    vat_rate: float
+    discount_rate: float
+    position: int
+    total_excl_tax: float
+    gross_total_excl_tax: float
+    discount_amount: float
+    vat_amount: float
+    total_incl_tax: float
+    class Config:
+        from_attributes = True
+
 class InvoiceRead(InvoiceBase):
     id: int
     number: str
@@ -68,11 +86,14 @@ class InvoiceRead(InvoiceBase):
     created_at: datetime | None = None
     updated_at: datetime | None = None
     amount_paid: float
+    vat_amount: float
+    total_incl_tax: float
     balance_remaining: float
     company: InvoiceCompanyRead
     quote: InvoiceQuoteRead
     opportunity: InvoiceOpportunityRead
     assigned_user: InvoiceUserRead
+    lines: list[InvoiceLineRead] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
@@ -80,6 +101,7 @@ class InvoiceRead(InvoiceBase):
 class InvoiceUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     total_amount: float | None = Field(default=None, gt=0)
+    vat_rate: float | None = Field(default=None, ge=0, le=100)
     status: InvoiceStatus | None = None
     due_date: datetime | None = None
     issue_date: datetime | None = None
@@ -106,4 +128,3 @@ class InvoicePaymentRead(BaseModel):
 
     class Config:
         from_attributes = True
-    

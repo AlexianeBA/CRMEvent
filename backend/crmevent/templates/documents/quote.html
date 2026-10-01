@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="document-head"><div><div class="eyebrow">Proposition commerciale</div><h1>Devis</h1><div class="muted">{{ quote.title }}</div></div><div class="meta"><span class="status status-{{ quote.status }}">{{ status_label }}</span><br><br><strong>{{ quote.number }}</strong></div></div>
+<table><thead><tr><th>Description</th><th class="right">Quantité</th><th class="right">Prix unitaire HT</th><th class="right">Remise</th><th class="right">TVA</th><th class="right">Total HT</th></tr></thead><tbody>{% for line in lines %}<tr><td>{{ line.description }}</td><td class="right">{{ line.quantity }} {{ line.unit }}</td><td class="right">{{ '%.2f'|format(line.unit_price_excl_tax) }} €</td><td class="right">{{ line.discount_rate }} %</td><td class="right">{{ line.vat_rate }} %</td><td class="right">{{ '%.2f'|format(line.total_excl_tax) }} €</td></tr>{% endfor %}</tbody></table>
+<div class="box right">Total HT : {{ '%.2f'|format(total_excl_tax) }} €<br>TVA : {{ '%.2f'|format(vat_amount) }} €<br><span class="total">Total TTC : {{ '%.2f'|format(total_incl_tax) }} €</span></div>
+{% if organization.legal_notice %}<div class="section-title">Mentions légales</div><p class="muted">{{ organization.legal_notice }}</p>{% endif %}
+{% endblock %}

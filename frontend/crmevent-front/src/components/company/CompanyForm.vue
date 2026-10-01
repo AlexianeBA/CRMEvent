@@ -28,6 +28,13 @@
         prepend-inner-icon="mdi-city"
       />
 
+      <v-text-field v-model="model.postalCode" label="Code postal" variant="outlined" prepend-inner-icon="mdi-mailbox-outline" />
+      <v-text-field v-model="model.country" label="Pays" variant="outlined" prepend-inner-icon="mdi-earth" />
+      <v-text-field v-model="model.email" label="E-mail de l’entreprise" type="email" variant="outlined" prepend-inner-icon="mdi-email-outline" />
+      <v-text-field v-model="model.phone" label="Téléphone de l’entreprise" variant="outlined" prepend-inner-icon="mdi-phone-outline" />
+      <v-text-field v-model="model.siret" label="SIRET" variant="outlined" prepend-inner-icon="mdi-identifier" counter="14" />
+      <v-text-field v-model="model.vatNumber" label="N° TVA intracommunautaire" variant="outlined" prepend-inner-icon="mdi-receipt-text-outline" />
+
       <div class="full-width contacts-header">
         <div class="contacts-title">Contacts existants</div>
         <v-btn

@@ -6,6 +6,7 @@ class Event(Base):
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True, index=True)
+    number = Column(String, unique=True, nullable=False)
     title = Column(String, nullable=False)
     type = Column(Enum("webinar", "workshop", "conference", name="event_type"), nullable=False) 
     date = Column(String, nullable=False)

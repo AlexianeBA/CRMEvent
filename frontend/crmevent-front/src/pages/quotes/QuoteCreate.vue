@@ -18,7 +18,7 @@ const router = useRouter()
 const quoteFormRef = ref(null)
 const saving = ref(false)
 const error = ref("")
-const form = ref({ title: "", totalAmount: null, companyId: null, opportunityId: null, assignedUserId: null, eventId: null })
+const form = ref({ title: "", companyId: null, opportunityId: null, assignedUserId: null, eventId: null, lines: [{ description: "", quantity: 1, unit: "unité", unitPrice: 0, discountRate: 0, vatRate: 20 }] })
 
 async function submit() {
   error.value = ""
@@ -30,7 +30,7 @@ async function submit() {
   try {
     const quote = await quoteService.create({
       title: form.value.title.trim(),
-      total_amount: Number(form.value.totalAmount),
+      lines: form.value.lines.map((line, position) => ({ description: line.description.trim(), quantity: Number(line.quantity), unit: line.unit.trim(), unit_price_excl_tax: Number(line.unitPrice), discount_rate: Number(line.discountRate), vat_rate: Number(line.vatRate), position })),
       company_id: Number(form.value.companyId),
       opportunity_id: Number(form.value.opportunityId),
       assigned_user_id: Number(form.value.assignedUserId),

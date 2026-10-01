@@ -1,5 +1,6 @@
+from decimal import Decimal
 from sqlalchemy.orm import Session
-from crmevent.models.quote import Quote
+from crmevent.models.quote import Quote, QuoteLine
 from crmevent.schemas.quote import QuoteCreate, QuoteStatus
 from crmevent.services.company import get_company
 from crmevent.services.opportunity import get_opportunity
@@ -7,10 +8,11 @@ from crmevent.services.event import get_event
 from crmevent.models.users import Users
 from crmevent.services.workflow import ensure_transition_allowed, QUOTE_TRANSITIONS, block_if_final_status
 from crmevent.services.invoice import create_invoice_from_quote
+from crmevent.services.document_sequence import next_document_number
 
 from fastapi import HTTPException
 
-IMMUTABLE_AFTER_SENT = {"number", "company_id", "opportunity_id", "assigned_user_id", "event_id"}
+IMMUTABLE_AFTER_SENT = {"number", "company_id", "opportunity_id", "assigned_user_id", "event_id", "lines", "total_amount"}
 IMMUTABLE_AFTER_FINAL = {"number", "title", "total_amount", "company_id", "opportunity_id", "assigned_user_id", "event_id", "status"}
 ALLOWED_SORT = {
     "id": Quote.id,
@@ -32,17 +34,15 @@ def accept_quote(db: Session, quote_id: int):
     return quote, invoice
 
 def generate_quote_number(db: Session):
+    return next_document_number(db, "quote")
 
-    last_quote = db.query(Quote).order_by(Quote.id.desc()).first()
-    if not last_quote or not last_quote.number:
-        return "Q-0001"
 
-    try:
-        last_number = int(last_quote.number.split("-")[1])
-    except Exception:
-        last_number = last_quote.id
-
-    return f"Q-{last_number + 1:04d}"
+def _line_total(lines):
+    return sum((
+        Decimal(line.quantity) * Decimal(line.unit_price_excl_tax)
+        * (Decimal("1") - Decimal(line.discount_rate) / Decimal("100"))
+        for line in lines
+    ), Decimal("0.00"))
 
 def create_quote(db: Session, data: QuoteCreate):
     if not get_company(db, data.company_id):
@@ -62,10 +62,13 @@ def create_quote(db: Session, data: QuoteCreate):
             raise HTTPException(status_code=404, detail=f"Event {data.event_id} not found")
         if event.company_id != data.company_id or event.opportunity_id != data.opportunity_id:
             raise HTTPException(status_code=422, detail="L'événement ne correspond pas à l'entreprise et à l'opportunité sélectionnées")
-    payload = data.model_dump()
+    lines = data.lines
+    payload = data.model_dump(exclude={"lines", "total_amount"})
     payload["number"] = generate_quote_number(db)
     payload["status"] = QuoteStatus.draft
+    payload["total_amount"] = _line_total(lines)
     quote = Quote(**payload)
+    quote.lines = [QuoteLine(**line.model_dump(mode="python")) for line in lines]
     db.add(quote)
     db.commit()
     db.refresh(quote)
@@ -100,6 +103,7 @@ def get_quotes(db: Session, company_id: int | None = None, opportunity_id: int |
 
 def update_quote(db: Session, quote: Quote, data):
     payload = data.model_dump(exclude_unset=True)
+    updated_lines = data.lines if "lines" in data.model_fields_set else None
 
     if quote.status in {"accepted", "rejected", "expired", "locked"}:
         raise HTTPException(status_code=400, detail=f"Quote is locked in status {quote.status}")
@@ -115,6 +119,12 @@ def update_quote(db: Session, quote: Quote, data):
         new_status = payload.pop("status").value
         ensure_transition_allowed(QUOTE_TRANSITIONS, quote.status, new_status, "Quote")
         quote.status = new_status
+
+    payload.pop("lines", None)
+    lines = updated_lines
+    if lines is not None:
+        quote.lines = [QuoteLine(**line.model_dump(mode="python")) for line in lines]
+        payload["total_amount"] = _line_total(lines)
 
     for key, value in payload.items():
         setattr(quote, key, value)

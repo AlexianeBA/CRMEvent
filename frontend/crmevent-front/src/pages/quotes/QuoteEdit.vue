@@ -24,7 +24,7 @@ const quoteFormRef = ref(null)
 const loading = ref(false)
 const saving = ref(false)
 const error = ref("")
-const form = ref({ title: "", totalAmount: null, companyId: null, opportunityId: null, assignedUserId: null, eventId: null })
+const form = ref({ title: "", companyId: null, opportunityId: null, assignedUserId: null, eventId: null, lines: [] })
 
 async function loadQuote() {
   loading.value = true
@@ -33,11 +33,11 @@ async function loadQuote() {
     const quote = await quoteService.getById(route.params.id)
     Object.assign(form.value, {
       title: quote.title ?? "",
-      totalAmount: Number(quote.total_amount),
       companyId: quote.company_id,
       opportunityId: quote.opportunity_id,
       assignedUserId: quote.assigned_user_id,
       eventId: quote.event_id,
+      lines: (quote.lines ?? []).map((line) => ({ description: line.description, quantity: Number(line.quantity), unit: line.unit, unitPrice: Number(line.unit_price_excl_tax), discountRate: Number(line.discount_rate), vatRate: Number(line.vat_rate) })),
     })
   } catch (err) {
     error.value = err.response?.data?.detail ?? "Impossible de charger le devis"
@@ -56,7 +56,7 @@ async function submit() {
   try {
     const quote = await quoteService.update(route.params.id, {
       title: form.value.title.trim(),
-      total_amount: Number(form.value.totalAmount),
+      lines: form.value.lines.map((line, position) => ({ description: line.description.trim(), quantity: Number(line.quantity), unit: line.unit.trim(), unit_price_excl_tax: Number(line.unitPrice), discount_rate: Number(line.discountRate), vat_rate: Number(line.vatRate), position })),
     })
     await router.push({ name: "QuoteView", params: { id: quote.id } })
   } catch (err) {

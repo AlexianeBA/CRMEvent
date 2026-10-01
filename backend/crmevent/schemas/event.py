@@ -69,6 +69,7 @@ class EventUserRead(BaseModel):
 
 class EventRead(EventBase):
     id: int
+    number: str
     status: EventStatus
     company: EventCompanyRead
     opportunity: EventOpportunityRead

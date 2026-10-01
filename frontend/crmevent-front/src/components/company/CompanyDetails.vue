@@ -123,7 +123,13 @@ const router = useRouter()
 const generalFields = [
   { key: "name", label: "Nom" },
   { key: "address", label: "Adresse" },
+  { key: "postal_code", label: "Code postal" },
   { key: "city", label: "Ville" },
+  { key: "country", label: "Pays" },
+  { key: "email", label: "E-mail" },
+  { key: "phone", label: "Téléphone" },
+  { key: "siret", label: "SIRET" },
+  { key: "vat_number", label: "N° TVA intracommunautaire" },
 ]
 
 function getInitials(contact) {

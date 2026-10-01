@@ -45,6 +45,14 @@ export const eventService = {
   async delete(id) {
     await api.delete(`/events/${id}`)
   },
+
+  async downloadConfirmation(id) {
+    return api.get(`/events/${id}/confirmation/pdf`, { responseType: "blob" })
+  },
+
+  async exportExcel(params = {}) {
+    return api.get("/events/export/excel", { params, responseType: "blob" })
+  },
 }
 
 export default eventService

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="document-head"><div><div class="eyebrow">Document de facturation</div><h1>Facture</h1><div class="muted">{{ invoice.title }} · Devis {{ invoice.quote.number }}</div></div><div class="meta"><span class="status status-{{ invoice.status }}">{{ status_label }}</span><br><br><strong>{{ invoice.number }}</strong><br><span class="muted">Émise le {{ invoice.issue_date.strftime('%d/%m/%Y') }}</span></div></div>
+<table>
+  <thead><tr><th>Description</th><th class="right">Quantité</th><th class="right">Prix unitaire HT</th><th class="right">Remise</th><th class="right">TVA</th><th class="right">Total HT</th></tr></thead>
+  <tbody>{% for line in lines %}<tr><td>{{ line.description }}</td><td class="right">{{ line.quantity }} {{ line.unit }}</td><td class="right">{{ '%.2f'|format(line.unit_price_excl_tax) }} €</td><td class="right">{{ line.discount_rate }} %</td><td class="right">{{ line.vat_rate }} %</td><td class="right">{{ '%.2f'|format(line.total_excl_tax) }} €</td></tr>{% endfor %}</tbody>
+</table>
+<table class="summary">
+  <tr><td>Total HT</td><td>{{ '%.2f'|format(total_excl_tax) }} €</td></tr>
+  <tr><td>Total TVA</td><td>{{ '%.2f'|format(vat_amount) }} €</td></tr>
+  <tr class="grand-total"><td class="total">Total TTC</td><td class="total">{{ '%.2f'|format(total_incl_tax) }} €</td></tr>
+  <tr><td>Déjà payé</td><td>{{ '%.2f'|format(invoice.amount_paid) }} €</td></tr>
+</table>
+<div class="section-title">Paiement</div>
+<div class="payment-box"><strong>{{ invoice.payment_terms }}</strong>{% if organization.bank_name %}<br>Banque : {{ organization.bank_name }}{% endif %}{% if organization.iban %}<br>IBAN : {{ organization.iban }}{% endif %}{% if organization.bic %}<br>BIC : {{ organization.bic }}{% endif %}<br>Date d'échéance : {{ invoice.due_date.strftime('%d/%m/%Y') }}</div>
+<div class="section-title">Mentions légales</div>
+<p class="muted">
+  {{ organization.registration_notice }}
+  {{ invoice.payment_terms }}, exigible le {{ invoice.due_date.strftime('%d/%m/%Y') }}.
+  En cas de retard de règlement le jour suivant la date de paiement, les pénalités de retard dues correspondent à {{ organization.late_penalty_rate }} % du montant TTC.
+  Le montant de l'indemnité forfaitaire est de {{ organization.recovery_fee }} € pour frais de recouvrement.
+  Pas d'escompte pour règlement anticipé. Facturation de prestation de service.
+  {% if invoice.quote.event %}Date limite d'exécution : {{ invoice.quote.event.date }}.{% endif %}
+  {% if organization.legal_notice %} {{ organization.legal_notice }}{% endif %}
+</p>
+{% endblock %}

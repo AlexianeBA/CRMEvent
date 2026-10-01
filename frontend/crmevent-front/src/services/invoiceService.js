@@ -46,6 +46,14 @@ export const invoiceService = {
     await api.delete(`/invoices/${id}/payments/${paymentId}`)
   },
 
+  async downloadPdf(id) {
+    return api.get(`/invoices/${id}/pdf`, { responseType: "blob" })
+  },
+
+  async exportExcel(params = {}) {
+    return api.get("/invoices/export/excel", { params, responseType: "blob" })
+  },
+
   async delete(id) {
     await api.delete(`/invoices/${id}`)
   },

@@ -10,6 +10,7 @@ from crmevent.services.opportunity import get_opportunity
 from crmevent.services.contact import get_contact
 from crmevent.models.users import Users
 from crmevent.services.workflow import ensure_transition_allowed, EVENT_TRANSITIONS
+from crmevent.services.document_sequence import next_document_number
 
 IMMUTABLE_AFTER_SCHEDULED = {
     "company_id",
@@ -44,7 +45,7 @@ def create_event(db: Session, data: EventCreate):
         if contact.company_id != data.company_id:
             raise HTTPException(status_code=422, detail="Le contact n'appartient pas à l'entreprise sélectionnée")
 
-    event = Event(**data.model_dump(), status="draft")
+    event = Event(**data.model_dump(), status="draft", number=next_document_number(db, "event"))
     db.add(event)
     db.commit()
     db.refresh(event)

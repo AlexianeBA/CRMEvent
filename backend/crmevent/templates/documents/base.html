@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <style>
+    @page { size: A4; margin: 16mm 18mm 18mm; @bottom-left { content: "{{ organization.name }}"; color: #94a3b8; font-size: 8px; } @bottom-right { content: "Page " counter(page) " / " counter(pages); color: #94a3b8; font-size: 8px; } }
+    body { font-family: DejaVu Sans, sans-serif; color: #243247; font-size: 10.5px; line-height: 1.5; }
+    header { display: table; width: 100%; table-layout: fixed; border-bottom: 3px solid #2563eb; padding-bottom: 17px; margin-bottom: 26px; }
+    header > div { display: table-cell; width: 50%; vertical-align: top; overflow-wrap: anywhere; }
+    h1 { color: #0f172a; font-size: 25px; letter-spacing: -.4px; margin: 0 0 5px; } h2 { color: #1e3a5f; font-size: 13px; margin: 24px 0 8px; }
+    .muted { color: #64748b; }.right { text-align: right; }.box { background: #f8fafc; border: 1px solid #e7edf4; border-radius: 8px; padding: 15px; margin: 16px 0; }
+    .document-head { display: table; width: 100%; margin: 5px 0 25px; }.document-head > div { display: table-cell; vertical-align: middle; }.document-head .meta { text-align: right; }
+    .eyebrow { color: #2563eb; font-size: 9px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; }
+    .status { display: inline-block; padding: 5px 11px; border-radius: 99px; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: .7px; background: #eaf2ff; color: #1d4ed8; }
+    .status-accepted, .status-paid, .status-held { background: #dcfce7; color: #15803d; }.status-rejected, .status-canceled, .status-overdue { background: #fee2e2; color: #b91c1c; }.status-expired { background: #ffedd5; color: #c2410c; }.status-locked { background: #ede9fe; color: #6d28d9; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; } th { background: #edf4fc; color: #1e3a5f; font-size: 9px; text-transform: uppercase; letter-spacing: .35px; } th, td { padding: 10px 9px; border-bottom: 1px solid #e5eaf0; text-align: left; } tbody tr:nth-child(even) { background: #fbfdff; }
+    .total { font-size: 16px; font-weight: bold; color: #0f9f8f; }.legal { margin-top: 36px; font-size: 9px; color: #64748b; }
+    .section-title { padding: 8px 11px; margin-top: 25px; background: #edf4fc; border-left: 3px solid #2563eb; color: #1e3a5f; font-weight: bold; }
+    .summary { width: 39%; margin-left: auto; margin-top: 18px; background: #f8fafc; }.summary td { border: 0; padding: 5px 10px; }.summary td:last-child { text-align: right; }.summary .grand-total td { border-top: 1px solid #cbd5e1; padding-top: 9px; }
+    .payment-box { display: inline-block; min-width: 44%; padding: 12px; border: 1px solid #e5eaf0; border-radius: 6px; background: #fbfdff; margin-top: 9px; }
+    .draft { position: fixed; transform: rotate(-35deg); top: 42%; left: 20%; font-size: 70px; color: rgba(100,116,139,.12); font-weight: bold; }
+  </style>
+</head>
+<body>
+  {% if status == "draft" %}<div class="draft">BROUILLON</div>{% endif %}
+  <header>
+    <div><strong>{{ organization.name }}</strong><br>{{ organization.address }}<br>{{ organization.postal_code }} {{ organization.city }}<br>{{ organization.country }}{% if organization.email %}<br>{{ organization.email }}{% endif %}{% if organization.phone %}<br>{{ organization.phone }}{% endif %}{% if organization.siret %}<br><strong>SIRET :</strong> {{ organization.siret }}{% endif %}{% if organization.vat_number %}<br><strong>N° TVA :</strong> {{ organization.vat_number }}{% endif %}</div>
+    <div class="right">{% if customer %}<strong>{{ customer.name }}</strong>{% if customer.address %}<br>{{ customer.address }}{% endif %}{% if customer.postal_code or customer.city %}<br>{{ customer.postal_code or "" }} {{ customer.city or "" }}{% endif %}{% if customer.country %}<br>{{ customer.country }}{% endif %}{% if customer.email %}<br>{{ customer.email }}{% endif %}{% if customer.phone %}<br>{{ customer.phone }}{% endif %}{% if customer.siret %}<br><strong>SIRET :</strong> {{ customer.siret }}{% endif %}{% if customer.vat_number %}<br><strong>N° TVA :</strong> {{ customer.vat_number }}{% endif %}{% endif %}</div>
+  </header>
+  {% block content %}{% endblock %}
+</body>
+</html>

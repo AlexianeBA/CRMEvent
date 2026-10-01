@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from crmevent.db.base import get_db
@@ -6,8 +7,26 @@ from crmevent.schemas.event import EventCreate, EventRead, EventUpdate, EventSta
 from crmevent.services import event as service
 from crmevent.core.security import get_current_user, require_roles
 from crmevent.services.history import record_history, status_label
+from crmevent.services.document_export import events_excel, generate_pdf
 
 router = APIRouter(prefix="/events", tags=["events"], dependencies=[Depends(get_current_user)])
+
+
+@router.get("/export/excel")
+def export_excel(
+    db: Session = Depends(get_db),
+    company_id: int | None = Query(default=None),
+    opportunity_id: int | None = Query(default=None),
+    assigned_user_id: int | None = Query(default=None),
+    q: str | None = Query(default=None),
+):
+    events = service.get_events(db, company_id=company_id, opportunity_id=opportunity_id,
+        assigned_user_id=assigned_user_id, q=q)
+    return StreamingResponse(
+        events_excel(events),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="evenements.xlsx"'},
+    )
 
 
 @router.post("/", response_model=EventRead)
@@ -25,6 +44,17 @@ def get(event_id: int, db: Session = Depends(get_db)):
     if not event:
         raise HTTPException(status_code=404, detail="Not found")
     return event
+
+
+@router.get("/{event_id}/confirmation/pdf")
+def download_confirmation(event_id: int, db: Session = Depends(get_db)):
+    event = service.get_event(db, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Not found")
+    content = generate_pdf("event_confirmation.html", event=event, status=event.status)
+    return Response(content=content, media_type="application/pdf", headers={
+        "Content-Disposition": f'attachment; filename="confirmation-{event.number}.pdf"',
+    })
 
 
 @router.get("/", response_model=list[EventRead])

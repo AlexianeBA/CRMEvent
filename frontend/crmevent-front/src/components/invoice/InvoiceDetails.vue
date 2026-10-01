@@ -14,6 +14,7 @@
       </template>
     </DetailsCard>
   </div>
+  <v-card class="mt-6" rounded="xl" elevation="0" border><v-card-title>Lignes facturées</v-card-title><v-table><thead><tr><th>Description</th><th>Quantité</th><th>Prix HT</th><th>Remise</th><th>TVA</th><th>Total HT</th></tr></thead><tbody><tr v-for="line in invoice.lines" :key="line.id"><td>{{ line.description }}</td><td>{{ line.quantity }} {{ line.unit }}</td><td>{{ currencyFormatter(line.unit_price_excl_tax) }}</td><td>{{ line.discount_rate }} %</td><td>{{ line.vat_rate }} %</td><td>{{ currencyFormatter(line.total_excl_tax) }}</td></tr></tbody></v-table></v-card>
 </template>
 
 <script setup>
@@ -26,7 +27,10 @@ const dateFormatter = (value) => value ? new Intl.DateTimeFormat("fr-FR", { date
 const generalFields = [
   { key: "number", label: "Numéro" },
   { key: "title", label: "Titre" },
-  { key: "total_amount", label: "Montant total", formatter: (value) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(value ?? 0)) },
+  { key: "total_amount", label: "Montant HT", formatter: currencyFormatter },
+  { key: "vat_rate", label: "Taux de TVA", formatter: (value) => `${Number(value ?? 0)} %` },
+  { key: "vat_amount", label: "Montant TVA", formatter: currencyFormatter },
+  { key: "total_incl_tax", label: "Montant TTC", formatter: currencyFormatter },
   { key: "amount_paid", label: "Montant payé", formatter: currencyFormatter },
   { key: "balance_remaining", label: "Solde restant", formatter: currencyFormatter },
   { key: "status", label: "Statut" },

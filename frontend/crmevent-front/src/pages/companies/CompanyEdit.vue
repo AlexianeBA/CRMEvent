@@ -52,6 +52,12 @@ const form = ref({
   name: "",
   address: "",
   city: "",
+  postalCode: "",
+  country: "France",
+  email: "",
+  phone: "",
+  siret: "",
+  vatNumber: "",
   contacts: [],
 })
 
@@ -73,6 +79,12 @@ async function loadCompany() {
     name: company.name ?? "",
     address: company.address ?? "",
     city: company.city ?? "",
+    postalCode: company.postal_code ?? "",
+    country: company.country ?? "France",
+    email: company.email ?? "",
+    phone: company.phone ?? "",
+    siret: company.siret ?? "",
+    vatNumber: company.vat_number ?? "",
     contacts: (company.contacts ?? []).map(
       (contact) => ({
         id: contact.id,
@@ -144,6 +156,12 @@ function buildPayload() {
     city: normalizeOptionalValue(
       form.value.city,
     ),
+    postal_code: normalizeOptionalValue(form.value.postalCode),
+    country: normalizeOptionalValue(form.value.country),
+    email: normalizeOptionalValue(form.value.email),
+    phone: normalizeOptionalValue(form.value.phone),
+    siret: normalizeOptionalValue(form.value.siret),
+    vat_number: normalizeOptionalValue(form.value.vatNumber),
     contact_ids: form.value.contacts.map(
       (contact) => contact.id,
     ),

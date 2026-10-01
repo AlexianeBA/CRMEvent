@@ -25,8 +25,9 @@ from crmevent.models.contact import Contact
 from crmevent.models.opportunity import Opportunity
 from crmevent.models.activity import Activity
 from crmevent.models.event import Event
-from crmevent.models.quote import Quote
-from crmevent.models.invoice import Invoice, InvoicePayment
+from crmevent.models.quote import Quote, QuoteLine
+from crmevent.models.invoice import Invoice, InvoicePayment, InvoiceLine
+from crmevent.models.document_sequence import DocumentSequence
 from crmevent.models.history import HistoryEntry
 from crmevent.models.notification import Notification
 from crmevent.models.task import Task
@@ -47,6 +48,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 app.include_router(company_router.router)
 app.include_router(users_router.router)

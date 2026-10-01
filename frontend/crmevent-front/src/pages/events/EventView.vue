@@ -11,6 +11,7 @@
       @edit="goToEdit"
     >
       <template #actions>
+        <v-btn v-if="event" variant="tonal" prepend-icon="mdi-file-pdf-box" :loading="downloading" @click="downloadConfirmation">Télécharger la confirmation</v-btn>
         <v-btn
           v-for="transition in auth.canManageCrm ? transitions : []"
           :key="transition.status"
@@ -78,6 +79,7 @@ import EventDetails from "@/components/event/EventDetails.vue"
 import { eventService } from "@/services/eventService"
 import { useAuthStore } from "@/stores/auth"
 import HistoryTimeline from "@/components/history/HistoryTimeline.vue"
+import { downloadResponse } from "@/utils/download"
 
 const route = useRoute()
 const router = useRouter()
@@ -86,6 +88,7 @@ const auth = useAuthStore()
 const event = ref(null)
 const loading = ref(false)
 const actionLoading = ref(false)
+const downloading = ref(false)
 const error = ref("")
 
 const statusLabels = {
@@ -190,6 +193,14 @@ function changeStatus(status) {
   return runAction(async () => {
     event.value = await eventService.updateStatus(route.params.id, status)
   })
+}
+
+async function downloadConfirmation() {
+  downloading.value = true
+  error.value = ""
+  try { downloadResponse(await eventService.downloadConfirmation(event.value.id), `confirmation-EVT-${event.value.id}.pdf`) }
+  catch (err) { error.value = err.response?.data?.detail ?? "Impossible de télécharger la confirmation" }
+  finally { downloading.value = false }
 }
 
 async function deleteEvent() {

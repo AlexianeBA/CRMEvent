@@ -18,7 +18,7 @@ import { useRouter } from "vue-router"
 const props = defineProps({ loading: Boolean, quotes: { type: Array, default: () => [] }, invoices: { type: Array, default: () => [] } })
 const router = useRouter()
 const acceptedQuotes = computed(() => props.quotes.filter((item) => ["accepted", "locked"].includes(item.status)).reduce((sum, item) => sum + Number(item.total_amount ?? 0), 0))
-const invoicedAmount = computed(() => props.invoices.filter((item) => item.status !== "canceled").reduce((sum, item) => sum + Number(item.total_amount ?? 0), 0))
+const invoicedAmount = computed(() => props.invoices.filter((item) => item.status !== "canceled").reduce((sum, item) => sum + Number(item.total_incl_tax ?? item.total_amount ?? 0), 0))
 const paidAmount = computed(() => props.invoices.filter((item) => item.status !== "canceled").reduce((sum, item) => sum + Number(item.amount_paid ?? 0), 0))
 const outstandingAmount = computed(() => props.invoices.filter((item) => item.status !== "canceled").reduce((sum, item) => sum + Number(item.balance_remaining ?? item.total_amount ?? 0), 0))
 function formatCurrency(value) { return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value) }
