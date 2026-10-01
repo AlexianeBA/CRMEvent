@@ -8,6 +8,11 @@ export const userService = {
 
     return response.data
   },
+
+  async getAllUsers() {
+    const response = await api.get("/auth/users/list")
+    return response.data
+  },
 }
 
 export default userService

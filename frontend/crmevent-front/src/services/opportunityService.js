@@ -1,12 +1,13 @@
 import api from "@/api/api"
 
 export const opportunityService = {
-  async getOpportunities() {
+  async getOpportunities(params = {}) {
     const response = await api.get(
       "/opportunities",
       {
         params: {
           limit: 100,
+          ...params,
         },
       },
     )

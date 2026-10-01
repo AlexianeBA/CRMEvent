@@ -9,8 +9,8 @@ export const eventService = {
 
     return response.data
   },
-  async getEvents() {
-    const response = await api.get("/events")
+  async getEvents(params = {}) {
+    const response = await api.get("/events", { params })
 
     return response.data
   },

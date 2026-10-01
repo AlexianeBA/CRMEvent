@@ -1,8 +1,8 @@
 import api from "@/api/api"
 
 export const quoteService = {
-    async getQuotes() {
-        const response = await api.get("/quotes")
+    async getQuotes(params = {}) {
+        const response = await api.get("/quotes", { params })
         return response.data
     },
 

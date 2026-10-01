@@ -3,7 +3,7 @@
     <div class="card-header"><div><h3>Suivi financier</h3><p>Devis et facturation</p></div><v-icon icon="mdi-chart-box-outline" color="primary" /></div>
     <v-progress-linear v-if="loading" indeterminate />
     <div v-else class="financial-list">
-      <div><span>Devis acceptés</span><strong>{{ formatCurrency(acceptedQuotes) }}</strong></div>
+      <div v-if="showQuotes"><span>Devis acceptés</span><strong>{{ formatCurrency(acceptedQuotes) }}</strong></div>
       <div><span>Facturé</span><strong>{{ formatCurrency(invoicedAmount) }}</strong></div>
       <div><span>Encaissé</span><strong class="success">{{ formatCurrency(paidAmount) }}</strong></div>
       <div><span>À encaisser</span><strong class="warning">{{ formatCurrency(outstandingAmount) }}</strong></div>
@@ -15,7 +15,7 @@
 <script setup>
 import { computed } from "vue"
 import { useRouter } from "vue-router"
-const props = defineProps({ loading: Boolean, quotes: { type: Array, default: () => [] }, invoices: { type: Array, default: () => [] } })
+const props = defineProps({ loading: Boolean, quotes: { type: Array, default: () => [] }, invoices: { type: Array, default: () => [] }, showQuotes: { type: Boolean, default: true } })
 const router = useRouter()
 const acceptedQuotes = computed(() => props.quotes.filter((item) => ["accepted", "locked"].includes(item.status)).reduce((sum, item) => sum + Number(item.total_amount ?? 0), 0))
 const invoicedAmount = computed(() => props.invoices.filter((item) => item.status !== "canceled").reduce((sum, item) => sum + Number(item.total_incl_tax ?? item.total_amount ?? 0), 0))
