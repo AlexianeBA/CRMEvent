@@ -1,9 +1,47 @@
 <template>
   <header>
-    <div>
+    <div class="page-identity">
       <h2>{{ pageTitle }}</h2>
       <p>Bienvenue sur CRM Event</p>
     </div>
+
+    <v-menu v-model="searchMenu" location="bottom" :close-on-content-click="false" :open-on-click="false">
+      <template #activator="{ props }">
+        <v-text-field
+          v-bind="props"
+          v-model="searchQuery"
+          class="global-search"
+          density="compact"
+          variant="solo-filled"
+          flat
+          hide-details
+          clearable
+          prepend-inner-icon="mdi-magnify"
+          placeholder="Rechercher dans le CRM…"
+          autocomplete="off"
+          aria-label="Recherche globale"
+          @focus="openSearch"
+          @keydown.esc="searchMenu = false"
+          @click:clear="resetSearch"
+        />
+      </template>
+      <v-card width="560" max-width="calc(100vw - 24px)" class="search-results-card">
+        <div v-if="searchLoading" class="search-state"><v-progress-circular indeterminate size="24" color="primary" /> Recherche…</div>
+        <v-alert v-else-if="searchError" type="error" density="compact" variant="tonal" class="ma-3">{{ searchError }}</v-alert>
+        <div v-else-if="searchQuery.trim().length < 2" class="search-state">Saisissez au moins 2 caractères</div>
+        <div v-else-if="groupedResults.length === 0" class="search-state">Aucun résultat pour « {{ searchQuery }} »</div>
+        <div v-else class="search-groups">
+          <section v-for="group in groupedResults" :key="group.type" class="search-group">
+            <div class="search-group-title"><v-icon :icon="group.icon" size="17" />{{ group.label }}</div>
+            <button v-for="result in group.items" :key="`${result.type}-${result.id}`" type="button" class="search-result" @click="openSearchResult(result)">
+              <v-icon :icon="group.icon" color="primary" size="20" />
+              <span><strong>{{ result.title }}</strong><small v-if="result.subtitle">{{ result.subtitle }}</small></span>
+              <v-icon icon="mdi-chevron-right" size="18" color="grey" />
+            </button>
+          </section>
+        </div>
+      </v-card>
+    </v-menu>
 
     <div class="header-actions">
       <v-menu v-model="notificationMenu" location="bottom end" :close-on-content-click="false">
@@ -118,10 +156,11 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue"
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 import { useNotificationStore } from "@/stores/notifications"
+import searchService from "@/services/searchService"
 
 defineOptions({ name: "DashboardHeader" })
 
@@ -137,7 +176,14 @@ const passwordError = ref("")
 const passwordFormRef = ref(null)
 const showPasswords = ref(false)
 const notificationMenu = ref(false)
+const searchMenu = ref(false)
+const searchQuery = ref("")
+const searchResults = ref([])
+const searchLoading = ref(false)
+const searchError = ref("")
 let notificationTimer
+let searchTimer
+let searchRequestId = 0
 const passwordForm = reactive({ currentPassword: "", newPassword: "", confirmPassword: "" })
 
 const roleLabels = { admin: "Administrateur", manager: "Manager", commercial: "Commercial", comptable: "Comptable" }
@@ -172,6 +218,44 @@ const typeIcons = {
   task_assigned: "mdi-clipboard-check-outline",
   task_due: "mdi-clipboard-clock-outline",
 }
+const searchTypes = {
+  company: { label: "Entreprises", icon: "mdi-domain" },
+  contact: { label: "Contacts", icon: "mdi-account-outline" },
+  opportunity: { label: "Opportunités", icon: "mdi-briefcase-outline" },
+  event: { label: "Événements", icon: "mdi-calendar-outline" },
+  quote: { label: "Devis", icon: "mdi-file-document-outline" },
+  invoice: { label: "Factures", icon: "mdi-receipt-text-outline" },
+}
+const groupedResults = computed(() => Object.entries(searchTypes).map(([type, config]) => ({
+  type,
+  ...config,
+  items: searchResults.value.filter((item) => item.type === type),
+})).filter((group) => group.items.length))
+
+watch(searchQuery, (value) => {
+  window.clearTimeout(searchTimer)
+  searchError.value = ""
+  const query = value.trim()
+  if (query.length < 2) {
+    searchResults.value = []
+    searchLoading.value = false
+    searchMenu.value = Boolean(query)
+    return
+  }
+  searchMenu.value = true
+  searchLoading.value = true
+  const requestId = ++searchRequestId
+  searchTimer = window.setTimeout(async () => {
+    try {
+      const results = await searchService.search(query)
+      if (requestId === searchRequestId) searchResults.value = results
+    } catch {
+      if (requestId === searchRequestId) searchError.value = "Impossible d'effectuer la recherche"
+    } finally {
+      if (requestId === searchRequestId) searchLoading.value = false
+    }
+  }, 300)
+})
 
 function resetPasswordForm() {
   Object.assign(passwordForm, { currentPassword: "", newPassword: "", confirmPassword: "" })
@@ -210,6 +294,26 @@ function goToAdmin() {
   router.push({ name: "AdminUsers" })
 }
 
+function openSearch() {
+  if (searchQuery.value.trim()) searchMenu.value = true
+}
+
+function resetSearch() {
+  searchRequestId += 1
+  window.clearTimeout(searchTimer)
+  searchQuery.value = ""
+  searchResults.value = []
+  searchLoading.value = false
+  searchError.value = ""
+  searchMenu.value = false
+}
+
+async function openSearchResult(result) {
+  searchMenu.value = false
+  await router.push(result.url)
+  resetSearch()
+}
+
 async function openNotification(notification) {
   await notifications.markAsRead(notification)
   notificationMenu.value = false
@@ -229,12 +333,27 @@ onMounted(() => {
   notifications.refresh({ synchronize: true })
   notificationTimer = window.setInterval(() => notifications.refresh({ synchronize: true }), 60_000)
 })
-onBeforeUnmount(() => window.clearInterval(notificationTimer))
+onBeforeUnmount(() => {
+  window.clearInterval(notificationTimer)
+  window.clearTimeout(searchTimer)
+})
 </script>
 
 <style scoped>
-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: white; border-bottom: 1px solid #eee; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 20px 30px; background: white; border-bottom: 1px solid #eee; }
 header p { margin: 2px 0 0; color: #6b7280; }
+.page-identity { flex: 0 0 auto; min-width: 190px; }
+.global-search { flex: 0 1 520px; max-width: 520px; }
+.search-results-card { overflow: hidden; }
+.search-state { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 90px; padding: 24px; color: #6b7280; }
+.search-groups { max-height: min(620px, calc(100vh - 120px)); overflow-y: auto; padding: 8px 0; }
+.search-group + .search-group { border-top: 1px solid #eef2f7; }
+.search-group-title { display: flex; align-items: center; gap: 7px; padding: 10px 16px 5px; color: #64748b; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.search-result { display: grid; grid-template-columns: 24px minmax(0, 1fr) 20px; align-items: center; gap: 10px; width: 100%; padding: 10px 16px; border: 0; background: transparent; color: #111827; text-align: left; cursor: pointer; }
+.search-result:hover { background: #f5f7ff; }
+.search-result span, .search-result strong, .search-result small { display: block; min-width: 0; }
+.search-result strong, .search-result small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-result small { margin-top: 2px; color: #6b7280; }
 .header-actions { display: flex; align-items: center; gap: 4px; }
 .account-button { height: auto; padding: 6px 10px; text-transform: none; }
 .account-summary { display: flex; flex-direction: column; align-items: flex-start; margin: 0 8px; }
@@ -248,5 +367,6 @@ header p { margin: 2px 0 0; color: #6b7280; }
 .notification-list .unread { background: #eff6ff; }
 .notification-list small { color: #6b7280; }
 .notification-state { padding: 32px 16px; color: #6b7280; text-align: center; }
-@media (max-width: 700px) { .account-summary { display: none; } header { padding: 16px; } }
+@media (max-width: 950px) { .page-identity p { display: none; } .page-identity { min-width: auto; } }
+@media (max-width: 700px) { .account-summary { display: none; } header { flex-wrap: wrap; padding: 16px; gap: 12px; } .global-search { order: 3; flex-basis: 100%; max-width: none; } }
 </style>

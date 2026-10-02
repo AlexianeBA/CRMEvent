@@ -15,6 +15,7 @@ from crmevent.routers import (
     history as history_router,
     notification as notification_router,
     task as task_router,
+    search as search_router,
 )
 from crmevent.db.base import Base
 from crmevent.db.session import engine
@@ -61,6 +62,7 @@ app.include_router(invoice_router.router)
 app.include_router(history_router.router)
 app.include_router(notification_router.router)
 app.include_router(task_router.router)
+app.include_router(search_router.router)
 @app.get("/")
 def root():
     return {"message": "Bienvenue dans le CRM API"}
