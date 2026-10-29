@@ -1,27 +1,13 @@
 <template>
-  <DataTable
-    :items="store.quotes"
-    :columns="columns"
-    :search-fields="['number', 'title', 'status']"
-    :loading="store.loading"
-  >
+  <DataTable ref="table" resource="quotes" :columns="columns">
     <template #cell-status="{ value }">
-      <v-chip
-        :color="getStatusColor(value)"
-        size="small"
-        variant="tonal"
-      >
+      <v-chip :color="getStatusColor(value)" size="small" variant="tonal">
         {{ getStatusLabel(value) }}
       </v-chip>
     </template>
-      <template #actions="{ item }">
+    <template #actions="{ item }">
       <div class="action-buttons">
-        <v-btn
-          icon="mdi-eye-outline"
-          variant="text"
-          size="small"
-          @click.stop="viewQuote(item)"
-        />
+        <v-btn icon="mdi-eye-outline" variant="text" size="small" @click.stop="viewQuote(item)" />
 
         <v-btn
           v-if="auth.canManageCrm"
@@ -47,48 +33,48 @@
 </template>
 
 <script setup>
-import { onMounted } from "vue"
-import { useRouter } from "vue-router"
-import { useQuoteStore } from "@/stores/quotes"
-import DataTable from "@/components/common/DataTable.vue"
-import { useAuthStore } from "@/stores/auth"
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import quoteService from '@/services/quotesService'
+import DataTable from '@/components/common/DataTable.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const store = useQuoteStore()
+const table = ref(null)
 const auth = useAuthStore()
 
 const columns = [
   {
-    key: "number",
-    label: "Numéro",
+    key: 'number',
+    label: 'Numéro',
   },
   {
-    key: "title",
-    label: "Titre",
+    key: 'title',
+    label: 'Titre',
   },
   {
-    key: "total_amount",
-    label: "Total",
+    key: 'total_amount',
+    label: 'Total',
     formatter: (value) =>
-      new Intl.NumberFormat("fr-FR", {
-        style: "currency",
-        currency: "EUR",
+      new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'EUR',
       }).format(Number(value ?? 0)),
   },
   {
-    key: "status",
-    label: "Statut",
+    key: 'status',
+    label: 'Statut',
   },
 ]
 
 function getStatusLabel(status) {
   const labels = {
-    draft: "Brouillon",
-    sent: "Envoyé",
-    accepted: "Accepté",
-    rejected: "Refusé",
-    expired: "Expiré",
-    locked: "Verrouillé",
+    draft: 'Brouillon',
+    sent: 'Envoyé',
+    accepted: 'Accepté',
+    rejected: 'Refusé',
+    expired: 'Expiré',
+    locked: 'Verrouillé',
   }
 
   return labels[status] ?? status
@@ -96,15 +82,15 @@ function getStatusLabel(status) {
 
 function getStatusColor(status) {
   const colors = {
-    draft: "grey",
-    sent: "blue",
-    accepted: "green",
-    rejected: "red",
-    expired: "orange",
-    locked: "purple",
+    draft: 'grey',
+    sent: 'blue',
+    accepted: 'green',
+    rejected: 'red',
+    expired: 'orange',
+    locked: 'purple',
   }
 
-  return colors[status] ?? "grey"
+  return colors[status] ?? 'grey'
 }
 function viewQuote(quote) {
   router.push(`/quotes/${quote.id}`)
@@ -115,27 +101,22 @@ function editQuote(quote) {
 }
 
 function canEdit(quote) {
-  return ["draft", "sent"].includes(quote.status)
+  return ['draft', 'sent'].includes(quote.status)
 }
 
 async function deleteQuote(quote) {
-  const confirmed = window.confirm(
-    `Supprimer le devis ${quote.number} ?`,
-  )
+  const confirmed = window.confirm(`Supprimer le devis ${quote.number} ?`)
 
   if (!confirmed) {
     return
   }
 
   try {
-    await store.deleteQuote(quote.id)
+    await quoteService.delete(quote.id)
+    table.value?.reload()
   } catch (error) {
-    console.error("Erreur pendant la suppression du devis :", error)
-    window.alert(error.response?.data?.detail ?? "Impossible de supprimer le devis")
+    console.error('Erreur pendant la suppression du devis :', error)
+    window.alert(error.response?.data?.detail ?? 'Impossible de supprimer le devis')
   }
 }
-
-onMounted(() => {
-  store.loadQuotes()
-})
 </script>

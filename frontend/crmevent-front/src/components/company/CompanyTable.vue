@@ -1,10 +1,5 @@
 <template>
-  <DataTable
-    :items="store.companies"
-    :columns="columns"
-    :search-fields="['name', 'address', 'city']"
-    :loading="store.loading"
-  >
+  <DataTable ref="table" resource="companies" :columns="columns">
     <template #actions="{ item }">
       <div class="action-buttons">
         <v-btn
@@ -39,34 +34,34 @@
 </template>
 
 <script setup>
-import { onMounted } from "vue"
-import { useRouter } from "vue-router"
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-import { useCompanyStore } from "@/stores/company"
-import DataTable from "@/components/common/DataTable.vue"
-import { useAuthStore } from "@/stores/auth"
+import companyService from '@/services/companyService'
+import DataTable from '@/components/common/DataTable.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const store = useCompanyStore()
+const table = ref(null)
 const auth = useAuthStore()
 
 const columns = [
   {
-    key: "name",
-    label: "Nom",
+    key: 'name',
+    label: 'Nom',
   },
   {
-    key: "address",
-    label: "Adresse",
+    key: 'address',
+    label: 'Adresse',
   },
   {
-    key: "city",
-    label: "Ville",
+    key: 'city',
+    label: 'Ville',
   },
 ]
 
 function viewCompany(company) {
-  console.log("Bouton voir :", company)
+  console.log('Bouton voir :', company)
 
   if (!company?.id) {
     console.error("L'entreprise ne possède pas d'identifiant :", company)
@@ -74,7 +69,7 @@ function viewCompany(company) {
   }
 
   router.push({
-    name: "CompanyView",
+    name: 'CompanyView',
     params: {
       id: company.id,
     },
@@ -82,7 +77,7 @@ function viewCompany(company) {
 }
 
 function editCompany(company) {
-  console.log("Bouton modifier :", company)
+  console.log('Bouton modifier :', company)
 
   if (!company?.id) {
     console.error("L'entreprise ne possède pas d'identifiant :", company)
@@ -90,7 +85,7 @@ function editCompany(company) {
   }
 
   router.push({
-    name: "CompanyEdit",
+    name: 'CompanyEdit',
     params: {
       id: company.id,
     },
@@ -103,27 +98,19 @@ async function deleteCompany(company) {
     return
   }
 
-  const confirmed = window.confirm(
-    `Supprimer l'entreprise ${company.name} ?`,
-  )
+  const confirmed = window.confirm(`Supprimer l'entreprise ${company.name} ?`)
 
   if (!confirmed) {
     return
   }
 
   try {
-    await store.deleteCompany(company.id)
+    await companyService.delete(company.id)
+    table.value?.reload()
   } catch (error) {
-    console.error(
-      "Erreur pendant la suppression de l'entreprise :",
-      error,
-    )
+    console.error("Erreur pendant la suppression de l'entreprise :", error)
   }
 }
-
-onMounted(() => {
-  store.loadCompanies()
-})
 </script>
 
 <style scoped>

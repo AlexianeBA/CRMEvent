@@ -33,6 +33,7 @@ from crmevent.models.history import HistoryEntry
 from crmevent.models.notification import Notification
 from crmevent.models.task import Task
 from crmevent.services.notification_scheduler import notification_scheduler
+from crmevent.routers import listing as listing_router
 
 app = FastAPI(
     title="CRM API",
@@ -63,6 +64,7 @@ app.include_router(history_router.router)
 app.include_router(notification_router.router)
 app.include_router(task_router.router)
 app.include_router(search_router.router)
+app.include_router(listing_router.router)
 @app.get("/")
 def root():
     return {"message": "Bienvenue dans le CRM API"}

@@ -1,18 +1,8 @@
 <template>
-  <DataTable
-    :items="store.contacts"
-    :columns="columns"
-    :search-fields="['last_name', 'first_name', 'phone_number', 'email']"
-    :loading="store.loading"
-  >
-  <template #actions="{ item }">
+  <DataTable ref="table" resource="contacts" :columns="columns">
+    <template #actions="{ item }">
       <div class="action-buttons">
-        <v-btn
-          icon="mdi-eye-outline"
-          variant="text"
-          size="small"
-          @click="viewContact(item)"
-        />
+        <v-btn icon="mdi-eye-outline" variant="text" size="small" @click="viewContact(item)" />
 
         <v-btn
           v-if="auth.canManageCrm"
@@ -36,33 +26,32 @@
 </template>
 
 <script setup>
-import { onMounted } from "vue"
-import { useRouter } from "vue-router"
-import { useContactStore } from "@/stores/contact"
-import DataTable from "@/components/common/DataTable.vue"
-import { useAuthStore } from "@/stores/auth"
-
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import contactService from '@/services/contactService'
+import DataTable from '@/components/common/DataTable.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const store = useContactStore()
+const table = ref(null)
 const auth = useAuthStore()
 
 const columns = [
   {
-    key: "last_name",
-    label: "Nom",
+    key: 'last_name',
+    label: 'Nom',
   },
   {
-    key: "first_name",
-    label: "Prénom",
+    key: 'first_name',
+    label: 'Prénom',
   },
   {
-    key: "phone_number",
-    label: "Téléphone",
+    key: 'phone_number',
+    label: 'Téléphone',
   },
   {
-    key: "email",
-    label: "Email",
+    key: 'email',
+    label: 'Email',
   },
 ]
 
@@ -81,10 +70,7 @@ async function deleteContact(contact) {
     return
   }
 
-  await store.deleteContact(contact.id)
+  await contactService.delete(contact.id)
+  table.value?.reload()
 }
-
-onMounted(() => {
-  store.loadContacts()
-})
 </script>

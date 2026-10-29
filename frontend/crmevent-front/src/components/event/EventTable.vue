@@ -1,18 +1,8 @@
 <template>
-  <DataTable
-    :items="store.events"
-    :columns="columns"
-    :search-fields="['title', 'type', 'date', 'duration', 'location', 'status']"
-    :loading="store.loading"
-  >
-  <template #actions="{ item }">
+  <DataTable ref="table" resource="events" :columns="columns">
+    <template #actions="{ item }">
       <div class="action-buttons">
-        <v-btn
-          icon="mdi-eye-outline"
-          variant="text"
-          size="small"
-          @click="viewEvent(item)"
-        />
+        <v-btn icon="mdi-eye-outline" variant="text" size="small" @click="viewEvent(item)" />
 
         <v-btn
           v-if="auth.canManageCrm && ['draft', 'scheduled'].includes(item.status)"
@@ -36,56 +26,56 @@
 </template>
 
 <script setup>
-import { onMounted } from "vue"
-import { useRouter } from "vue-router"
-import { useEventStore } from "@/stores/event"
-import DataTable from "@/components/common/DataTable.vue"
-import { useAuthStore } from "@/stores/auth"
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import eventService from '@/services/eventService'
+import DataTable from '@/components/common/DataTable.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const store = useEventStore()
+const table = ref(null)
 const auth = useAuthStore()
 
 const typeLabels = {
-  webinar: "Webinaire",
-  workshop: "Atelier",
-  conference: "Conférence",
+  webinar: 'Webinaire',
+  workshop: 'Atelier',
+  conference: 'Conférence',
 }
 
 const statusLabels = {
-  draft: "Brouillon",
-  scheduled: "Planifié",
-  held: "Réalisé",
-  canceled: "Annulé",
-  locked: "Clôturé",
+  draft: 'Brouillon',
+  scheduled: 'Planifié',
+  held: 'Réalisé',
+  canceled: 'Annulé',
+  locked: 'Clôturé',
 }
 
 const columns = [
   {
-    key: "title",
-    label: "Titre",
+    key: 'title',
+    label: 'Titre',
   },
   {
-    key: "type",
-    label: "Type",
+    key: 'type',
+    label: 'Type',
     formatter: (value) => typeLabels[value] ?? value,
   },
   {
-    key: "date",
-    label: "Date",
+    key: 'date',
+    label: 'Date',
   },
   {
-    key: "duration",
-    label: "Durée",
+    key: 'duration',
+    label: 'Durée',
     formatter: (value) => `${value} h`,
   },
   {
-    key: "location",
-    label: "Localisation",
+    key: 'location',
+    label: 'Localisation',
   },
   {
-    key: "status",
-    label: "Statut",
+    key: 'status',
+    label: 'Statut',
     formatter: (value) => statusLabels[value] ?? value,
   },
 ]
@@ -96,18 +86,13 @@ function editEvent(event) {
   router.push(`/events/${event.id}/edit`)
 }
 async function deleteEvent(event) {
-  const confirmed = window.confirm(
-    `Supprimer l'événement ${event.title} ?`,
-  )
+  const confirmed = window.confirm(`Supprimer l'événement ${event.title} ?`)
 
   if (!confirmed) {
     return
   }
 
-  await store.deleteEvent(event.id)
+  await eventService.delete(event.id)
+  table.value?.reload()
 }
-
-onMounted(() => {
-  store.loadEvents()
-})
 </script>
